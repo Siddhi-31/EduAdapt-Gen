@@ -1,0 +1,2176 @@
+{
+  "S001": {
+    "Arrays": {
+      "student_id": "S001",
+      "parent_topic": "Arrays",
+      "overall_mastery": 0.0,
+      "mastery_tier": "Advanced",
+      "active_subtopic_id": "arr_1d_decl",
+      "subtopics": {
+        "arr_1d_decl": {
+          "id": "arr_1d_decl",
+          "title": "One-Dimensional Array Declaration and Memory Layout",
+          "order": 1,
+          "status": "In Progress",
+          "mastery": 0.0,
+          "learning_cycle": 1,
+          "max_cycles": 3,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [],
+          "history": [],
+          "is_completed": false,
+          "reading_completed": false
+        },
+        "arr_traversal": {
+          "id": "arr_traversal",
+          "title": "Array Indexing, Bounds Checking, and Traversal",
+          "order": 2,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "learning_cycle": 1,
+          "max_cycles": 3,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "arr_1d_decl"
+          ],
+          "history": [],
+          "is_completed": false,
+          "reading_completed": false
+        },
+        "arr_2d_matrices": {
+          "id": "arr_2d_matrices",
+          "title": "Two-Dimensional Arrays and Matrix Operations",
+          "order": 3,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "learning_cycle": 1,
+          "max_cycles": 3,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "arr_traversal"
+          ],
+          "history": [],
+          "is_completed": false,
+          "reading_completed": false
+        },
+        "arr_functions": {
+          "id": "arr_functions",
+          "title": "Passing Arrays to Functions and Array Decay",
+          "order": 4,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "learning_cycle": 1,
+          "max_cycles": 3,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "arr_traversal"
+          ],
+          "history": [],
+          "is_completed": false,
+          "reading_completed": false
+        }
+      },
+      "created_at": "2026-11-04T12:05:17.116147",
+      "updated_at": "2026-11-04T13:44:13.638430",
+      "completed_count": 0,
+      "mastered_count": 0,
+      "total_count": 4,
+      "progress_percent": 0
+    },
+    "Dynamic Memory Allocation": {
+      "student_id": "S001",
+      "parent_topic": "Dynamic Memory Allocation",
+      "overall_mastery": 0.76,
+      "mastery_tier": "Beginner",
+      "active_subtopic_id": "dma_calloc_realloc",
+      "subtopics": {
+        "dma_malloc_free": {
+          "id": "dma_malloc_free",
+          "title": "Heap Allocation with malloc and Deallocation with free",
+          "order": 1,
+          "status": "MASTERED",
+          "mastery": 0.57,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 1,
+          "accuracy": 1.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 95.0,
+          "remediation_focus": "Mastery achieved. Ready to advance to the next subtopic.",
+          "prerequisites": [],
+          "history": [
+            {
+              "timestamp": "2026-11-04T12:11:30.857367",
+              "cycle": 1,
+              "score": 95.0,
+              "accuracy": 1.0,
+              "is_correct": true,
+              "mastery_before": 0.0,
+              "mastery_after": 0.57,
+              "time_taken_seconds": 0.1127,
+              "weak_concepts": []
+            }
+          ],
+          "is_completed": true,
+          "reading_completed": false
+        },
+        "dma_calloc_realloc": {
+          "id": "dma_calloc_realloc",
+          "title": "Zeroed Allocation (calloc) and Resizing (realloc)",
+          "order": 2,
+          "status": "Mastered",
+          "mastery": 0.95,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 8,
+          "accuracy": 1.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 95.0,
+          "remediation_focus": "Mastery achieved. Ready to advance to the next subtopic.",
+          "prerequisites": [
+            "dma_malloc_free"
+          ],
+          "history": [
+            {
+              "timestamp": "2026-11-04T12:29:31.375053",
+              "cycle": 1,
+              "score": 95.0,
+              "accuracy": 1.0,
+              "is_correct": true,
+              "mastery_before": 0.0,
+              "mastery_after": 0.57,
+              "time_taken_seconds": 0.0952,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-04T12:55:25.201770",
+              "cycle": 1,
+              "score": 95.0,
+              "accuracy": 1.0,
+              "is_correct": true,
+              "mastery_before": 0.57,
+              "mastery_after": 0.8,
+              "time_taken_seconds": 0.109,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-04T12:57:24.007263",
+              "cycle": 1,
+              "score": 95.0,
+              "accuracy": 1.0,
+              "is_correct": true,
+              "mastery_before": 0.8,
+              "mastery_after": 0.89,
+              "time_taken_seconds": 0.1073,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-04T13:47:00.849819",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-04T13:49:01.450955",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            }
+          ],
+          "is_completed": true,
+          "reading_completed": false
+        }
+      },
+      "created_at": "2026-11-04T12:11:30.838375",
+      "updated_at": "2026-11-04T13:49:01.450955",
+      "completed_count": 2,
+      "mastered_count": 2,
+      "total_count": 2,
+      "progress_percent": 100
+    },
+    "Operators and Expressions": {
+      "student_id": "S001",
+      "parent_topic": "Operators and Expressions",
+      "overall_mastery": 1.0,
+      "mastery_tier": "Advanced",
+      "active_subtopic_id": "op_precedence_assoc",
+      "subtopics": {
+        "op_arith_rel_log": {
+          "id": "op_arith_rel_log",
+          "title": "Arithmetic, Relational, and Logical Operators",
+          "order": 1,
+          "status": "Mastered",
+          "mastery": 0.97,
+          "learning_cycle": 1,
+          "max_cycles": 3,
+          "attempts": 1,
+          "accuracy": 1.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 95.0,
+          "remediation_focus": "Mastery achieved. Ready to advance to the next subtopic.",
+          "prerequisites": [],
+          "history": [
+            {
+              "timestamp": "2026-11-04T13:01:07.906552",
+              "cycle": 1,
+              "score": 95.0,
+              "accuracy": 1.0,
+              "is_correct": true,
+              "mastery_before": 1.0,
+              "mastery_after": 0.97,
+              "time_taken_seconds": 12,
+              "weak_concepts": []
+            }
+          ]
+        },
+        "op_precedence_assoc": {
+          "id": "op_precedence_assoc",
+          "title": "Operator Precedence, Associativity, and Evaluation Order",
+          "order": 2,
+          "status": "Mastered",
+          "mastery": 0.57,
+          "learning_cycle": 1,
+          "max_cycles": 3,
+          "attempts": 1,
+          "accuracy": 1.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 95.0,
+          "remediation_focus": "Mastery achieved. Ready to advance to the next subtopic.",
+          "prerequisites": [
+            "op_arith_rel_log"
+          ],
+          "history": [
+            {
+              "timestamp": "2026-11-04T13:01:40.642610",
+              "cycle": 1,
+              "score": 95.0,
+              "accuracy": 1.0,
+              "is_correct": true,
+              "mastery_before": 0.0,
+              "mastery_after": 0.57,
+              "time_taken_seconds": 15,
+              "weak_concepts": []
+            }
+          ]
+        }
+      },
+      "created_at": "2026-11-04T12:58:31.125834",
+      "updated_at": "2026-11-04T13:01:40.642610"
+    },
+    "Functions": {
+      "student_id": "S001",
+      "parent_topic": "Functions",
+      "overall_mastery": 0.0,
+      "mastery_tier": "Beginner",
+      "active_subtopic_id": "fn_decl_def",
+      "subtopics": {
+        "fn_decl_def": {
+          "id": "fn_decl_def",
+          "title": "Function Declaration, Definition, and Prototypes",
+          "order": 1,
+          "status": "In Progress",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [],
+          "history": []
+        },
+        "fn_call_by_value": {
+          "id": "fn_call_by_value",
+          "title": "Parameter Passing and Call Stack Frames",
+          "order": 2,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "fn_decl_def"
+          ],
+          "history": []
+        },
+        "fn_recursion": {
+          "id": "fn_recursion",
+          "title": "Recursion Principles and Base Cases",
+          "order": 3,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "fn_call_by_value"
+          ],
+          "history": []
+        }
+      },
+      "created_at": "2026-11-04T13:57:16.024903",
+      "updated_at": "2026-11-04T13:57:16.024903",
+      "completed_count": 0,
+      "mastered_count": 0,
+      "total_count": 3,
+      "progress_percent": 0
+    },
+    "Loops": {
+      "student_id": "S001",
+      "parent_topic": "Loops",
+      "overall_mastery": 0.32,
+      "mastery_tier": "Beginner",
+      "active_subtopic_id": "loop_dowhile",
+      "subtopics": {
+        "loop_while": {
+          "id": "loop_while",
+          "title": "While Loop and Entry-Controlled Iteration",
+          "order": 1,
+          "status": "COMPLETED",
+          "mastery": 0.7,
+          "is_completed": true,
+          "reading_completed": true,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 9,
+          "accuracy": 0.11,
+          "identified_misconceptions": [
+            "Selected option C does not correctly represent While Loop and Entry-Controlled Iteration.",
+            "Selected option A does not correctly represent While Loop and Entry-Controlled Iteration.",
+            "Selected option D does not correctly represent While Loop and Entry-Controlled Iteration."
+          ],
+          "error_categories": [],
+          "last_score": 70.0,
+          "remediation_focus": "Mastery gate passed. Ready to advance.",
+          "prerequisites": [],
+          "history": [
+            {
+              "timestamp": "2026-11-04T14:10:12.053623",
+              "attempt": 1,
+              "selected_option": "B) How many times does the loop body execute in the example code?",
+              "correct_option": "B",
+              "is_correct": true,
+              "score": 100.0,
+              "mastery": 0.9,
+              "status": "MASTERED",
+              "time_taken_seconds": 25
+            },
+            {
+              "timestamp": "2026-11-04T14:10:16.450713",
+              "attempt": 2,
+              "selected_option": "C) What would happen if the loop control variable `i` was not initialized before the loop?",
+              "correct_option": "B",
+              "is_correct": false,
+              "score": 35.0,
+              "mastery": 0.35,
+              "status": "REMEDIATION_REQUIRED",
+              "time_taken_seconds": 25
+            },
+            {
+              "timestamp": "2026-11-04T14:10:30.136960",
+              "attempt": 3,
+              "selected_option": "A) The loop may run indefinitely (infinite loop)",
+              "correct_option": "A",
+              "is_correct": true,
+              "score": 70.0,
+              "mastery": 0.7,
+              "status": "COMPLETED",
+              "time_taken_seconds": 25
+            },
+            {
+              "timestamp": "2026-11-04T14:10:41.155655",
+              "attempt": 4,
+              "selected_option": "A) Entry-controlled iteration",
+              "correct_option": "B",
+              "is_correct": false,
+              "score": 35.0,
+              "mastery": 0.35,
+              "status": "REMEDIATION_REQUIRED",
+              "time_taken_seconds": 25
+            },
+            {
+              "timestamp": "2026-11-04T14:10:48.238517",
+              "attempt": 5,
+              "selected_option": "A) The loop may run indefinitely (infinite loop)",
+              "correct_option": "A",
+              "is_correct": true,
+              "score": 70.0,
+              "mastery": 0.7,
+              "status": "COMPLETED",
+              "time_taken_seconds": 25
+            },
+            {
+              "timestamp": "2026-11-04T14:10:49.588760",
+              "attempt": 6,
+              "selected_option": "D) The loop exits, and the program continues with the next statement outside the loop.",
+              "correct_option": "B",
+              "is_correct": false,
+              "score": 35.0,
+              "mastery": 0.35,
+              "status": "REMEDIATION_REQUIRED",
+              "time_taken_seconds": 25
+            },
+            {
+              "timestamp": "2026-11-04T14:10:54.014219",
+              "attempt": 7,
+              "selected_option": "A) The loop may run indefinitely (infinite loop)",
+              "correct_option": "A",
+              "is_correct": true,
+              "score": 70.0,
+              "mastery": 0.7,
+              "status": "COMPLETED",
+              "time_taken_seconds": 25
+            },
+            {
+              "timestamp": "2026-11-04T14:10:59.194817",
+              "attempt": 8,
+              "selected_option": "B) How many times does the loop body execute in the example code?",
+              "correct_option": "B",
+              "is_correct": true,
+              "score": 70.0,
+              "mastery": 0.7,
+              "status": "COMPLETED",
+              "time_taken_seconds": 25
+            },
+            {
+              "timestamp": "2026-11-04T14:11:02.692547",
+              "attempt": 9,
+              "selected_option": "B) How many times does the loop body execute in the example code?",
+              "correct_option": "B",
+              "is_correct": true,
+              "score": 70.0,
+              "mastery": 0.7,
+              "status": "COMPLETED",
+              "time_taken_seconds": 25
+            }
+          ],
+          "reading_completed_at": "2026-11-04T14:09:30.610808"
+        },
+        "loop_for": {
+          "id": "loop_for",
+          "title": "For Loop Mechanics and Multi-Variable Headers",
+          "order": 2,
+          "status": "MASTERED",
+          "mastery": 0.9,
+          "is_completed": true,
+          "reading_completed": true,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 1,
+          "accuracy": 1.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 100.0,
+          "remediation_focus": "Mastery gate passed. Ready to advance.",
+          "prerequisites": [
+            "loop_while"
+          ],
+          "history": [
+            {
+              "timestamp": "2026-11-04T14:12:43.540849",
+              "attempt": 1,
+              "selected_option": "A) It avoids potential integer overflow when left + right exceeds INT_MAX",
+              "correct_option": "A",
+              "is_correct": true,
+              "score": 100.0,
+              "mastery": 0.9,
+              "status": "MASTERED",
+              "time_taken_seconds": 25
+            }
+          ],
+          "reading_completed_at": "2026-11-04T14:12:34.784563"
+        },
+        "loop_dowhile": {
+          "id": "loop_dowhile",
+          "title": "Do-While Loop and Exit-Controlled Iteration",
+          "order": 3,
+          "status": "In Progress",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "loop_while"
+          ],
+          "history": []
+        },
+        "loop_control_statements": {
+          "id": "loop_control_statements",
+          "title": "Loop Jump Statements: Break and Continue",
+          "order": 4,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "loop_for"
+          ],
+          "history": []
+        },
+        "loop_nested": {
+          "id": "loop_nested",
+          "title": "Nested Loops and Pattern Printing",
+          "order": 5,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "loop_for"
+          ],
+          "history": []
+        }
+      },
+      "created_at": "2026-11-04T14:03:53.432574",
+      "updated_at": "2026-11-04T18:32:38.790230",
+      "completed_count": 2,
+      "mastered_count": 1,
+      "total_count": 5,
+      "progress_percent": 40
+    },
+    "Strings": {
+      "student_id": "S001",
+      "parent_topic": "Strings",
+      "overall_mastery": 0.0,
+      "mastery_tier": "Beginner",
+      "active_subtopic_id": "str_basics_null",
+      "subtopics": {
+        "str_basics_null": {
+          "id": "str_basics_null",
+          "title": "Character Arrays and the Null Terminator ('\\0')",
+          "order": 1,
+          "status": "In Progress",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [],
+          "history": []
+        },
+        "str_io": {
+          "id": "str_io",
+          "title": "String Input and Output Operations",
+          "order": 2,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "str_basics_null"
+          ],
+          "history": []
+        },
+        "str_library_functions": {
+          "id": "str_library_functions",
+          "title": "Standard String Manipulation Functions (<string.h>)",
+          "order": 3,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "str_basics_null"
+          ],
+          "history": []
+        }
+      },
+      "created_at": "2026-11-04T14:28:29.716863",
+      "updated_at": "2026-11-04T14:28:29.716863",
+      "completed_count": 0,
+      "mastered_count": 0,
+      "total_count": 3,
+      "progress_percent": 0
+    },
+    "Structures": {
+      "student_id": "S001",
+      "parent_topic": "Structures",
+      "overall_mastery": 0.0,
+      "mastery_tier": "Beginner",
+      "active_subtopic_id": "struct_decl_access",
+      "subtopics": {
+        "struct_decl_access": {
+          "id": "struct_decl_access",
+          "title": "Structure Declaration, Memory Layout, and Dot Operator",
+          "order": 1,
+          "status": "In Progress",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [],
+          "history": []
+        },
+        "struct_pointers_arrow": {
+          "id": "struct_pointers_arrow",
+          "title": "Pointers to Structures and the Arrow Operator (->)",
+          "order": 2,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "struct_decl_access"
+          ],
+          "history": []
+        }
+      },
+      "created_at": "2026-11-04T14:28:29.753427",
+      "updated_at": "2026-11-04T14:28:29.753427",
+      "completed_count": 0,
+      "mastered_count": 0,
+      "total_count": 2,
+      "progress_percent": 0
+    },
+    "Pointers": {
+      "student_id": "S001",
+      "parent_topic": "Pointers",
+      "overall_mastery": 0.13,
+      "mastery_tier": "Beginner",
+      "active_subtopic_id": "ptr_operators",
+      "subtopics": {
+        "ptr_intro_addresses": {
+          "id": "ptr_intro_addresses",
+          "title": "Introduction to Memory Addresses and Pointer Concept",
+          "order": 1,
+          "status": "MASTERED",
+          "mastery": 0.57,
+          "is_completed": true,
+          "reading_completed": true,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 2,
+          "accuracy": 1.0,
+          "identified_misconceptions": [
+            "Selected option A does not correctly represent Introduction to Memory Addresses and Pointer Concept."
+          ],
+          "error_categories": [],
+          "last_score": 95.0,
+          "remediation_focus": "Mastery achieved. Ready to advance to the next subtopic.",
+          "prerequisites": [],
+          "history": [
+            {
+              "timestamp": "2026-11-04T17:23:15.565795",
+              "attempt": 1,
+              "selected_option": "A) To pass data by value",
+              "correct_option": "B",
+              "is_correct": false,
+              "score": 35.0,
+              "mastery": 0.0,
+              "status": "REMEDIATION_REQUIRED",
+              "time_taken_seconds": 25
+            },
+            {
+              "timestamp": "2026-11-04T17:32:25.262088",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            }
+          ],
+          "reading_completed_at": "2026-11-04T17:23:14.481266"
+        },
+        "ptr_decl_init": {
+          "id": "ptr_decl_init",
+          "title": "Pointer Declaration and Initialization",
+          "order": 2,
+          "status": "Mastered",
+          "mastery": 0.57,
+          "is_completed": true,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 1,
+          "accuracy": 1.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 95.0,
+          "remediation_focus": "Mastery achieved. Ready to advance to the next subtopic.",
+          "prerequisites": [
+            "ptr_intro_addresses"
+          ],
+          "history": [
+            {
+              "timestamp": "2026-11-04T17:32:26.345928",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            }
+          ]
+        },
+        "ptr_operators": {
+          "id": "ptr_operators",
+          "title": "Address-of (&) and Dereference (*) Operators",
+          "order": 3,
+          "status": "In Progress",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_decl_init"
+          ],
+          "history": []
+        },
+        "ptr_arithmetic": {
+          "id": "ptr_arithmetic",
+          "title": "Pointer Arithmetic and Type Scaling",
+          "order": 4,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_operators"
+          ],
+          "history": []
+        },
+        "ptr_arrays": {
+          "id": "ptr_arrays",
+          "title": "Pointers and Array Equivalence",
+          "order": 5,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_arithmetic"
+          ],
+          "history": []
+        },
+        "ptr_strings": {
+          "id": "ptr_strings",
+          "title": "Pointers and Strings",
+          "order": 6,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_arrays"
+          ],
+          "history": []
+        },
+        "ptr_functions": {
+          "id": "ptr_functions",
+          "title": "Pointers and Functions (Call by Reference)",
+          "order": 7,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_operators"
+          ],
+          "history": []
+        },
+        "ptr_to_ptr": {
+          "id": "ptr_to_ptr",
+          "title": "Pointer to Pointer (Double Indirection)",
+          "order": 8,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_operators"
+          ],
+          "history": []
+        },
+        "ptr_safety_debugging": {
+          "id": "ptr_safety_debugging",
+          "title": "NULL, Dangling, Wild Pointers and Debugging",
+          "order": 9,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_operators"
+          ],
+          "history": []
+        }
+      },
+      "created_at": "2026-11-04T17:23:12.678852",
+      "updated_at": "2026-11-04T17:32:26.345928",
+      "completed_count": 2,
+      "mastered_count": 2,
+      "total_count": 9,
+      "progress_percent": 22
+    },
+    "Conditionals": {
+      "student_id": "S001",
+      "parent_topic": "Conditionals",
+      "overall_mastery": 0.89,
+      "mastery_tier": "Beginner",
+      "active_subtopic_id": "cond_switch",
+      "subtopics": {
+        "cond_if_else": {
+          "id": "cond_if_else",
+          "title": "Decision Making with If, If-Else, and Else-If Ladders",
+          "order": 1,
+          "status": "MASTERED",
+          "mastery": 0.9,
+          "is_completed": true,
+          "reading_completed": true,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 1,
+          "accuracy": 1.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 100.0,
+          "remediation_focus": "Mastery gate passed. Ready to advance.",
+          "prerequisites": [],
+          "history": [
+            {
+              "timestamp": "2026-11-04T18:21:52.019446",
+              "attempt": 1,
+              "selected_option": "A) 0 (due to short-circuit evaluation)",
+              "correct_option": "A",
+              "is_correct": true,
+              "score": 100.0,
+              "mastery": 0.9,
+              "status": "MASTERED",
+              "time_taken_seconds": 25
+            }
+          ],
+          "reading_completed_at": "2026-11-04T18:21:31.631839"
+        },
+        "cond_switch": {
+          "id": "cond_switch",
+          "title": "Multi-Way Branching with Switch-Case Statements",
+          "order": 2,
+          "status": "Mastered",
+          "mastery": 0.88,
+          "is_completed": true,
+          "reading_completed": true,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 3,
+          "accuracy": 1.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 95.0,
+          "remediation_focus": "Mastery achieved. Ready to advance to the next subtopic.",
+          "prerequisites": [
+            "cond_if_else"
+          ],
+          "history": [
+            {
+              "timestamp": "2026-11-04T18:25:28.445429",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-04T18:26:43.517865",
+              "attempt": 2,
+              "selected_option": "B) `switch ('a') { ... }`",
+              "correct_option": "B",
+              "is_correct": true,
+              "score": 80.0,
+              "mastery": 0.78,
+              "status": "COMPLETED",
+              "time_taken_seconds": 25
+            },
+            {
+              "timestamp": "2026-11-04T18:32:18.932697",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            }
+          ],
+          "reading_completed_at": "2026-11-04T18:26:27.831011"
+        }
+      },
+      "created_at": "2026-11-04T18:19:32.919515",
+      "updated_at": "2026-11-04T18:32:18.932697",
+      "completed_count": 2,
+      "mastered_count": 2,
+      "total_count": 2,
+      "progress_percent": 100
+    }
+  },
+  "S999": {
+    "Loops": {
+      "student_id": "S999",
+      "parent_topic": "Loops",
+      "overall_mastery": 0.0,
+      "mastery_tier": "Beginner",
+      "active_subtopic_id": "loop_while",
+      "subtopics": {
+        "loop_while": {
+          "id": "loop_while",
+          "title": "While Loop and Entry-Controlled Iteration",
+          "order": 1,
+          "status": "In Progress",
+          "mastery": 0.0,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [],
+          "history": []
+        },
+        "loop_for": {
+          "id": "loop_for",
+          "title": "For Loop Mechanics and Multi-Variable Headers",
+          "order": 2,
+          "status": "Pending Prerequisite",
+          "mastery": 0.0,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "loop_while"
+          ],
+          "history": []
+        },
+        "loop_dowhile": {
+          "id": "loop_dowhile",
+          "title": "Do-While Loop and Exit-Controlled Iteration",
+          "order": 3,
+          "status": "Pending Prerequisite",
+          "mastery": 0.0,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "loop_while"
+          ],
+          "history": []
+        },
+        "loop_control_statements": {
+          "id": "loop_control_statements",
+          "title": "Loop Jump Statements: Break and Continue",
+          "order": 4,
+          "status": "Pending Prerequisite",
+          "mastery": 0.0,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "loop_for"
+          ],
+          "history": []
+        },
+        "loop_nested": {
+          "id": "loop_nested",
+          "title": "Nested Loops and Pattern Printing",
+          "order": 5,
+          "status": "Pending Prerequisite",
+          "mastery": 0.0,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "loop_for"
+          ],
+          "history": []
+        }
+      },
+      "created_at": "2026-11-04T12:05:17.065573",
+      "updated_at": "2026-11-04T12:05:17.065573"
+    }
+  },
+  "S005": {
+    "Loops": {
+      "student_id": "S005",
+      "parent_topic": "Loops",
+      "overall_mastery": 0.0,
+      "mastery_tier": "Beginner",
+      "active_subtopic_id": "loop_while",
+      "subtopics": {
+        "loop_while": {
+          "id": "loop_while",
+          "title": "While Loop and Entry-Controlled Iteration",
+          "order": 1,
+          "status": "In Progress",
+          "mastery": 0.0,
+          "learning_cycle": 5,
+          "max_cycles": 5,
+          "attempts": 9,
+          "accuracy": 0.0,
+          "identified_misconceptions": [
+            "Loops"
+          ],
+          "error_categories": [
+            "CONCEPTUAL"
+          ],
+          "last_score": 35.0,
+          "remediation_focus": "Maximum teaching cycles (5) reached for this subtopic. Mastery remains developing (0.00). Targeted remediation recommended before retrying assessment.",
+          "prerequisites": [],
+          "history": [
+            {
+              "timestamp": "2026-11-04T12:11:30.109650",
+              "cycle": 1,
+              "score": 35.0,
+              "accuracy": 0.0,
+              "is_correct": false,
+              "mastery_before": 0.0,
+              "mastery_after": 0.21,
+              "time_taken_seconds": 90,
+              "weak_concepts": [
+                "Loops"
+              ]
+            },
+            {
+              "timestamp": "2026-11-04T12:29:30.711843",
+              "cycle": 2,
+              "score": 35.0,
+              "accuracy": 0.0,
+              "is_correct": false,
+              "mastery_before": 0.21,
+              "mastery_after": 0.29,
+              "time_taken_seconds": 90,
+              "weak_concepts": [
+                "Loops"
+              ]
+            },
+            {
+              "timestamp": "2026-11-04T12:55:24.411378",
+              "cycle": 3,
+              "score": 35.0,
+              "accuracy": 0.0,
+              "is_correct": false,
+              "mastery_before": 0.29,
+              "mastery_after": 0.33,
+              "time_taken_seconds": 90,
+              "weak_concepts": [
+                "Loops"
+              ]
+            },
+            {
+              "timestamp": "2026-11-04T12:57:23.137416",
+              "cycle": 4,
+              "score": 35.0,
+              "accuracy": 0.0,
+              "is_correct": false,
+              "mastery_before": 0.33,
+              "mastery_after": 0.34,
+              "time_taken_seconds": 90,
+              "weak_concepts": [
+                "Loops"
+              ]
+            },
+            {
+              "timestamp": "2026-11-04T13:47:00.048962",
+              "cycle": 5,
+              "score": 35.0,
+              "is_correct": false,
+              "accuracy": 0.0,
+              "weak_concepts": [
+                "Loops"
+              ]
+            },
+            {
+              "timestamp": "2026-11-04T13:49:00.669699",
+              "cycle": 5,
+              "score": 35.0,
+              "is_correct": false,
+              "accuracy": 0.0,
+              "weak_concepts": [
+                "Loops"
+              ]
+            }
+          ],
+          "is_completed": false,
+          "reading_completed": false
+        },
+        "loop_for": {
+          "id": "loop_for",
+          "title": "For Loop Mechanics and Multi-Variable Headers",
+          "order": 2,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "loop_while"
+          ],
+          "history": [],
+          "is_completed": false,
+          "reading_completed": false
+        },
+        "loop_dowhile": {
+          "id": "loop_dowhile",
+          "title": "Do-While Loop and Exit-Controlled Iteration",
+          "order": 3,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "loop_while"
+          ],
+          "history": [],
+          "is_completed": false,
+          "reading_completed": false
+        },
+        "loop_control_statements": {
+          "id": "loop_control_statements",
+          "title": "Loop Jump Statements: Break and Continue",
+          "order": 4,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "loop_for"
+          ],
+          "history": [],
+          "is_completed": false,
+          "reading_completed": false
+        },
+        "loop_nested": {
+          "id": "loop_nested",
+          "title": "Nested Loops and Pattern Printing",
+          "order": 5,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "loop_for"
+          ],
+          "history": [],
+          "is_completed": false,
+          "reading_completed": false
+        }
+      },
+      "created_at": "2026-11-04T12:11:30.094741",
+      "updated_at": "2026-11-04T13:49:00.669699",
+      "completed_count": 0,
+      "mastered_count": 0,
+      "total_count": 5,
+      "progress_percent": 0
+    },
+    "Arrays": {
+      "student_id": "S005",
+      "parent_topic": "Arrays",
+      "overall_mastery": 0.0,
+      "mastery_tier": "Beginner",
+      "active_subtopic_id": "arr_1d_decl",
+      "subtopics": {
+        "arr_1d_decl": {
+          "id": "arr_1d_decl",
+          "title": "One-Dimensional Array Declaration and Memory Layout",
+          "order": 1,
+          "status": "In Progress",
+          "mastery": 0.0,
+          "learning_cycle": 5,
+          "max_cycles": 5,
+          "attempts": 9,
+          "accuracy": 0.0,
+          "identified_misconceptions": [
+            "Arrays"
+          ],
+          "error_categories": [
+            "CONCEPTUAL"
+          ],
+          "last_score": 35.0,
+          "remediation_focus": "Maximum teaching cycles (5) reached for this subtopic. Mastery remains developing (0.00). Targeted remediation recommended before retrying assessment.",
+          "prerequisites": [],
+          "history": [
+            {
+              "timestamp": "2026-11-04T12:11:30.199972",
+              "cycle": 1,
+              "score": 35.0,
+              "accuracy": 0.0,
+              "is_correct": false,
+              "mastery_before": 0.0,
+              "mastery_after": 0.21,
+              "time_taken_seconds": 50,
+              "weak_concepts": [
+                "Arrays"
+              ]
+            },
+            {
+              "timestamp": "2026-11-04T12:29:30.793967",
+              "cycle": 2,
+              "score": 35.0,
+              "accuracy": 0.0,
+              "is_correct": false,
+              "mastery_before": 0.21,
+              "mastery_after": 0.29,
+              "time_taken_seconds": 50,
+              "weak_concepts": [
+                "Arrays"
+              ]
+            },
+            {
+              "timestamp": "2026-11-04T12:55:24.494895",
+              "cycle": 3,
+              "score": 35.0,
+              "accuracy": 0.0,
+              "is_correct": false,
+              "mastery_before": 0.29,
+              "mastery_after": 0.33,
+              "time_taken_seconds": 50,
+              "weak_concepts": [
+                "Arrays"
+              ]
+            },
+            {
+              "timestamp": "2026-11-04T12:57:23.235298",
+              "cycle": 4,
+              "score": 35.0,
+              "accuracy": 0.0,
+              "is_correct": false,
+              "mastery_before": 0.33,
+              "mastery_after": 0.34,
+              "time_taken_seconds": 50,
+              "weak_concepts": [
+                "Arrays"
+              ]
+            },
+            {
+              "timestamp": "2026-11-04T13:47:00.149245",
+              "cycle": 5,
+              "score": 35.0,
+              "is_correct": false,
+              "accuracy": 0.0,
+              "weak_concepts": [
+                "Arrays"
+              ]
+            },
+            {
+              "timestamp": "2026-11-04T13:49:00.773166",
+              "cycle": 5,
+              "score": 35.0,
+              "is_correct": false,
+              "accuracy": 0.0,
+              "weak_concepts": [
+                "Arrays"
+              ]
+            }
+          ],
+          "is_completed": false,
+          "reading_completed": false
+        },
+        "arr_traversal": {
+          "id": "arr_traversal",
+          "title": "Array Indexing, Bounds Checking, and Traversal",
+          "order": 2,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "arr_1d_decl"
+          ],
+          "history": [],
+          "is_completed": false,
+          "reading_completed": false
+        },
+        "arr_2d_matrices": {
+          "id": "arr_2d_matrices",
+          "title": "Two-Dimensional Arrays and Matrix Operations",
+          "order": 3,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "arr_traversal"
+          ],
+          "history": [],
+          "is_completed": false,
+          "reading_completed": false
+        },
+        "arr_functions": {
+          "id": "arr_functions",
+          "title": "Passing Arrays to Functions and Array Decay",
+          "order": 4,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "arr_traversal"
+          ],
+          "history": [],
+          "is_completed": false,
+          "reading_completed": false
+        }
+      },
+      "created_at": "2026-11-04T12:11:30.189188",
+      "updated_at": "2026-11-04T13:49:00.773166",
+      "completed_count": 0,
+      "mastered_count": 0,
+      "total_count": 4,
+      "progress_percent": 0
+    },
+    "Pointers": {
+      "student_id": "S005",
+      "parent_topic": "Pointers",
+      "overall_mastery": 0.0,
+      "mastery_tier": "Beginner",
+      "active_subtopic_id": "ptr_intro_addresses",
+      "subtopics": {
+        "ptr_intro_addresses": {
+          "id": "ptr_intro_addresses",
+          "title": "Introduction to Memory Addresses and Pointer Concept",
+          "order": 1,
+          "status": "In Progress",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [],
+          "history": []
+        },
+        "ptr_decl_init": {
+          "id": "ptr_decl_init",
+          "title": "Pointer Declaration and Initialization",
+          "order": 2,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_intro_addresses"
+          ],
+          "history": []
+        },
+        "ptr_operators": {
+          "id": "ptr_operators",
+          "title": "Address-of (&) and Dereference (*) Operators",
+          "order": 3,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_decl_init"
+          ],
+          "history": []
+        },
+        "ptr_arithmetic": {
+          "id": "ptr_arithmetic",
+          "title": "Pointer Arithmetic and Type Scaling",
+          "order": 4,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_operators"
+          ],
+          "history": []
+        },
+        "ptr_arrays": {
+          "id": "ptr_arrays",
+          "title": "Pointers and Array Equivalence",
+          "order": 5,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_arithmetic"
+          ],
+          "history": []
+        },
+        "ptr_strings": {
+          "id": "ptr_strings",
+          "title": "Pointers and Strings",
+          "order": 6,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_arrays"
+          ],
+          "history": []
+        },
+        "ptr_functions": {
+          "id": "ptr_functions",
+          "title": "Pointers and Functions (Call by Reference)",
+          "order": 7,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_operators"
+          ],
+          "history": []
+        },
+        "ptr_to_ptr": {
+          "id": "ptr_to_ptr",
+          "title": "Pointer to Pointer (Double Indirection)",
+          "order": 8,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_operators"
+          ],
+          "history": []
+        },
+        "ptr_safety_debugging": {
+          "id": "ptr_safety_debugging",
+          "title": "NULL, Dangling, Wild Pointers and Debugging",
+          "order": 9,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_operators"
+          ],
+          "history": []
+        }
+      },
+      "created_at": "2026-11-04T13:30:30.221657",
+      "updated_at": "2026-11-04T13:30:30.221657",
+      "completed_count": 0,
+      "mastered_count": 0,
+      "total_count": 9,
+      "progress_percent": 0
+    }
+  },
+  "S002": {
+    "Pointers": {
+      "student_id": "S002",
+      "parent_topic": "Pointers",
+      "overall_mastery": 0.0,
+      "mastery_tier": "Beginner",
+      "active_subtopic_id": "ptr_intro_addresses",
+      "subtopics": {
+        "ptr_intro_addresses": {
+          "id": "ptr_intro_addresses",
+          "title": "Introduction to Memory Addresses and Pointer Concept",
+          "order": 1,
+          "status": "In Progress",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [],
+          "history": []
+        },
+        "ptr_decl_init": {
+          "id": "ptr_decl_init",
+          "title": "Pointer Declaration and Initialization",
+          "order": 2,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_intro_addresses"
+          ],
+          "history": []
+        },
+        "ptr_operators": {
+          "id": "ptr_operators",
+          "title": "Address-of (&) and Dereference (*) Operators",
+          "order": 3,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_decl_init"
+          ],
+          "history": []
+        },
+        "ptr_arithmetic": {
+          "id": "ptr_arithmetic",
+          "title": "Pointer Arithmetic and Type Scaling",
+          "order": 4,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_operators"
+          ],
+          "history": []
+        },
+        "ptr_arrays": {
+          "id": "ptr_arrays",
+          "title": "Pointers and Array Equivalence",
+          "order": 5,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_arithmetic"
+          ],
+          "history": []
+        },
+        "ptr_strings": {
+          "id": "ptr_strings",
+          "title": "Pointers and Strings",
+          "order": 6,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_arrays"
+          ],
+          "history": []
+        },
+        "ptr_functions": {
+          "id": "ptr_functions",
+          "title": "Pointers and Functions (Call by Reference)",
+          "order": 7,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_operators"
+          ],
+          "history": []
+        },
+        "ptr_to_ptr": {
+          "id": "ptr_to_ptr",
+          "title": "Pointer to Pointer (Double Indirection)",
+          "order": 8,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_operators"
+          ],
+          "history": []
+        },
+        "ptr_safety_debugging": {
+          "id": "ptr_safety_debugging",
+          "title": "NULL, Dangling, Wild Pointers and Debugging",
+          "order": 9,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_operators"
+          ],
+          "history": []
+        }
+      },
+      "created_at": "2026-11-04T13:20:13.971512",
+      "updated_at": "2026-11-04T13:20:13.971512",
+      "completed_count": 0,
+      "mastered_count": 0,
+      "total_count": 9,
+      "progress_percent": 0
+    }
+  },
+  "S_API_TEST": {
+    "Pointers": {
+      "student_id": "S_API_TEST",
+      "parent_topic": "Pointers",
+      "overall_mastery": 0.09,
+      "mastery_tier": "Beginner",
+      "active_subtopic_id": "ptr_decl_init",
+      "subtopics": {
+        "ptr_intro_addresses": {
+          "id": "ptr_intro_addresses",
+          "title": "Introduction to Memory Addresses and Pointer Concept",
+          "order": 1,
+          "status": "COMPLETED",
+          "mastery": 0.78,
+          "is_completed": true,
+          "reading_completed": true,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 2,
+          "accuracy": 0.5,
+          "identified_misconceptions": [
+            "You confused `&val` (address of) with `val` (the direct value stored in the variable)."
+          ],
+          "error_categories": [],
+          "last_score": 80.0,
+          "remediation_focus": "Mastery gate passed. Ready to advance.",
+          "prerequisites": [],
+          "history": [
+            {
+              "timestamp": "2026-11-04T13:49:12.160117",
+              "attempt": 1,
+              "selected_option": "A",
+              "correct_option": "B",
+              "is_correct": false,
+              "score": 35.0,
+              "mastery": 0.0,
+              "status": "REMEDIATION_REQUIRED",
+              "time_taken_seconds": 25
+            },
+            {
+              "timestamp": "2026-11-04T13:49:12.185202",
+              "attempt": 2,
+              "selected_option": "B",
+              "correct_option": "B",
+              "is_correct": true,
+              "score": 80.0,
+              "mastery": 0.78,
+              "status": "COMPLETED",
+              "time_taken_seconds": 25
+            }
+          ],
+          "reading_completed_at": "2026-11-04T13:49:12.131740"
+        },
+        "ptr_decl_init": {
+          "id": "ptr_decl_init",
+          "title": "Pointer Declaration and Initialization",
+          "order": 2,
+          "status": "UNLOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_intro_addresses"
+          ],
+          "history": []
+        },
+        "ptr_operators": {
+          "id": "ptr_operators",
+          "title": "Address-of (&) and Dereference (*) Operators",
+          "order": 3,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_decl_init"
+          ],
+          "history": []
+        },
+        "ptr_arithmetic": {
+          "id": "ptr_arithmetic",
+          "title": "Pointer Arithmetic and Type Scaling",
+          "order": 4,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_operators"
+          ],
+          "history": []
+        },
+        "ptr_arrays": {
+          "id": "ptr_arrays",
+          "title": "Pointers and Array Equivalence",
+          "order": 5,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_arithmetic"
+          ],
+          "history": []
+        },
+        "ptr_strings": {
+          "id": "ptr_strings",
+          "title": "Pointers and Strings",
+          "order": 6,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_arrays"
+          ],
+          "history": []
+        },
+        "ptr_functions": {
+          "id": "ptr_functions",
+          "title": "Pointers and Functions (Call by Reference)",
+          "order": 7,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_operators"
+          ],
+          "history": []
+        },
+        "ptr_to_ptr": {
+          "id": "ptr_to_ptr",
+          "title": "Pointer to Pointer (Double Indirection)",
+          "order": 8,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_operators"
+          ],
+          "history": []
+        },
+        "ptr_safety_debugging": {
+          "id": "ptr_safety_debugging",
+          "title": "NULL, Dangling, Wild Pointers and Debugging",
+          "order": 9,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_operators"
+          ],
+          "history": []
+        }
+      },
+      "created_at": "2026-11-04T13:49:12.092108",
+      "updated_at": "2026-11-04T13:49:12.185202",
+      "completed_count": 1,
+      "mastered_count": 0,
+      "total_count": 9,
+      "progress_percent": 11
+    }
+  }
+}

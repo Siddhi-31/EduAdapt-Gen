@@ -106,6 +106,8 @@ export default function Practice({
 
   const handleGenerateAiPractice = async (sid = studentId, top = currentTopic) => {
     setIsLoadingAi(true);
+    setAiProblems(null);
+    setStudentCode('');
     setRevealedHints({});
     setErrorMessage(null);
     setExecResult(null);
@@ -203,6 +205,9 @@ export default function Practice({
     setErrorMessage(null);
     const chal = aiProblems?.challenge || (Array.isArray(aiProblems?.practice_problems) ? aiProblems.practice_problems[0] : null);
     try {
+      const allTestCases = chal?.expected_test_cases && chal.expected_test_cases.length > 0
+        ? chal.expected_test_cases
+        : null;
       const res = await executePracticeCode(
         studentId,
         currentTopic,
@@ -210,7 +215,8 @@ export default function Practice({
         chal?.expected_output || chal?.sample_output || null,
         true,
         chal?.sample_input || customStdin || null,
-        30.0
+        30.0,
+        allTestCases
       );
       setExecResult(res);
       if (res.passed && onAssessmentCompleted) {
@@ -757,7 +763,8 @@ export default function Practice({
                     value={studentCode}
                     onChange={(e) => setStudentCode(e.target.value)}
                     rows={24}
-                    spellCheck={false}
+                    spellCheck="false"
+                    data-ms-editor="false"
                     autoCapitalize="none"
                     autoComplete="off"
                     autoCorrect="off"
@@ -798,7 +805,8 @@ export default function Practice({
                     value={customStdin}
                     onChange={(e) => setCustomStdin(e.target.value)}
                     rows={3}
-                    spellCheck={false}
+                    spellCheck="false"
+                    data-ms-editor="false"
                     autoCapitalize="none"
                     autoComplete="off"
                     autoCorrect="off"
@@ -968,46 +976,70 @@ export default function Practice({
 
                     {/* Wrong Answer Output Comparison */}
                     {execResult.status === 'WRONG_ANSWER' && (
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px', marginBottom: '12px' }}>
-                        <div>
-                          <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-green)', marginBottom: '4px' }}>
-                            Expected Output:
+                      <div style={{ marginBottom: '12px' }}>
+                        {(execResult.stdin_input || execResult.input) && (
+                          <div style={{ marginBottom: '10px' }}>
+                            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-text-secondary)', marginBottom: '4px' }}>
+                              Failing Test Case Input (stdin):
+                            </div>
+                            <pre
+                              style={{
+                                backgroundColor: '#0f172a',
+                                color: '#93c5fd',
+                                padding: '8px 12px',
+                                borderRadius: 'var(--radius-sm)',
+                                fontSize: '12px',
+                                fontFamily: 'var(--font-mono)',
+                                overflowX: 'auto',
+                                whiteSpace: 'pre-wrap',
+                                margin: 0,
+                              }}
+                            >
+                              {execResult.stdin_input || execResult.input}
+                            </pre>
                           </div>
-                          <pre
-                            style={{
-                              backgroundColor: '#0f172a',
-                              color: '#4ade80',
-                              padding: '10px 12px',
-                              borderRadius: 'var(--radius-sm)',
-                              fontSize: '12px',
-                              fontFamily: 'var(--font-mono)',
-                              overflowX: 'auto',
-                              whiteSpace: 'pre-wrap',
-                              margin: 0,
-                            }}
-                          >
-                            {execResult.expected_output || '(Empty expected output)'}
-                          </pre>
-                        </div>
-                        <div>
-                          <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-red)', marginBottom: '4px' }}>
-                            Your Actual Output:
+                        )}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
+                          <div>
+                            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-green)', marginBottom: '4px' }}>
+                              Expected Output:
+                            </div>
+                            <pre
+                              style={{
+                                backgroundColor: '#0f172a',
+                                color: '#4ade80',
+                                padding: '10px 12px',
+                                borderRadius: 'var(--radius-sm)',
+                                fontSize: '12px',
+                                fontFamily: 'var(--font-mono)',
+                                overflowX: 'auto',
+                                whiteSpace: 'pre-wrap',
+                                margin: 0,
+                              }}
+                            >
+                              {execResult.expected_output || '(Empty expected output)'}
+                            </pre>
                           </div>
-                          <pre
-                            style={{
-                              backgroundColor: '#0f172a',
-                              color: '#f87171',
-                              padding: '10px 12px',
-                              borderRadius: 'var(--radius-sm)',
-                              fontSize: '12px',
-                              fontFamily: 'var(--font-mono)',
-                              overflowX: 'auto',
-                              whiteSpace: 'pre-wrap',
-                              margin: 0,
-                            }}
-                          >
-                            {execResult.actual_output || '(No standard output generated)'}
-                          </pre>
+                          <div>
+                            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-red)', marginBottom: '4px' }}>
+                              Your Actual Output:
+                            </div>
+                            <pre
+                              style={{
+                                backgroundColor: '#0f172a',
+                                color: '#f87171',
+                                padding: '10px 12px',
+                                borderRadius: 'var(--radius-sm)',
+                                fontSize: '12px',
+                                fontFamily: 'var(--font-mono)',
+                                overflowX: 'auto',
+                                whiteSpace: 'pre-wrap',
+                                margin: 0,
+                              }}
+                            >
+                              {execResult.actual_output || '(No standard output generated)'}
+                            </pre>
+                          </div>
                         </div>
                       </div>
                     )}

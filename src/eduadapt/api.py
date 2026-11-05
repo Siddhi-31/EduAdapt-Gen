@@ -103,6 +103,8 @@ def get_service(provider: Optional[str] = None, model: Optional[str] = None) -> 
 class LearningSessionRequest(BaseModel):
     student_id: str = Field(default="S001", description="Student identifier")
     topic: str = Field(default="Pointers", description="Curriculum topic")
+    subtopic: Optional[str] = Field(default=None, description="Optional target subtopic title or ID")
+    learning_cycle: Optional[int] = Field(default=None, description="Optional adaptive learning cycle number (1..5)")
     top_k: int = Field(default=3, description="RAG retrieval count", ge=1, le=10)
     provider: Optional[str] = Field(default="ollama", description="LLM provider: 'ollama' or 'mock'")
     model: Optional[str] = Field(default="mistral:7b", description="LLM model name")
@@ -122,11 +124,42 @@ class TutorChatRequest(BaseModel):
 class AssessmentSubmitRequest(BaseModel):
     student_id: str = Field(default="S001", description="Student identifier")
     topic: str = Field(default="Pointers", description="Curriculum topic")
+    subtopic_id: Optional[str] = Field(default=None, description="Optional subtopic identifier")
     selected_option: Optional[str] = Field(default="B", description="Student selected option, e.g. 'B'")
     time_taken_seconds: int = Field(default=25, description="Time taken in seconds")
     question_idx: int = Field(default=0, description="Index of question in topic bank")
     question_id: Optional[str] = Field(default=None, description="Optional question ID")
     answers: Optional[Dict[str, str]] = Field(default=None, description="Optional full assessment answers map")
+
+
+class CycleAdvanceRequest(BaseModel):
+    student_id: str = Field(default="S001", description="Student identifier")
+    topic: str = Field(default="Pointers", description="Curriculum parent topic")
+    subtopic_id: str = Field(..., description="Subtopic identifier")
+    score: float = Field(default=85.0, description="Assessment or check score (0..100)")
+    is_correct: bool = Field(default=True, description="Whether the check was passed")
+    weak_concepts: Optional[List[str]] = Field(default=None, description="List of concepts student missed")
+
+
+class SubtopicReadingCompleteRequest(BaseModel):
+    student_id: str = Field(default="S001", description="Student identifier")
+    topic: str = Field(default="Pointers", description="Curriculum parent topic")
+    subtopic_id: str = Field(..., description="Subtopic identifier to mark reading complete")
+
+
+class SubtopicMasteryCheckRequest(BaseModel):
+    student_id: str = Field(default="S001", description="Student identifier")
+    topic: str = Field(default="Pointers", description="Curriculum parent topic")
+    subtopic_id: str = Field(..., description="Subtopic identifier being tested")
+    selected_option: str = Field(..., description="Student's selected option letter or text")
+    time_taken_seconds: int = Field(default=25, description="Time taken in seconds")
+    custom_question: Optional[Dict[str, Any]] = Field(default=None, description="Optional custom question from lesson")
+    is_remedial: bool = Field(default=False, description="Whether this submission is for a remedial question")
+
+
+class SubtopicResetRequest(BaseModel):
+    student_id: str = Field(default="S001", description="Student identifier")
+    topic: str = Field(default="Pointers", description="Curriculum parent topic")
 
 
 class PracticeSubmitRequest(BaseModel):
@@ -147,6 +180,7 @@ class PracticeExecuteRequest(BaseModel):
     source_code: str = Field(..., description="C source code to compile and run")
     expected_output: Optional[str] = Field(default=None, description="Expected output for evaluation")
     stdin_input: Optional[str] = Field(default=None, description="Optional stdin input to feed to the program")
+    test_cases: Optional[List[Dict[str, str]]] = Field(default=None, description="Optional list of test cases")
     timeout_seconds: Optional[float] = Field(default=30.0, description="Execution timeout limit in seconds")
     is_submission: bool = Field(default=False, description="Whether this is a final submission evaluation")
 
@@ -347,6 +381,8 @@ def generate_session(req: LearningSessionRequest) -> Dict[str, Any]:
             generate_roadmap=True,
             generate_feedback=True,
             assessment_submission=req.assessment_submission,
+            subtopic=req.subtopic,
+            learning_cycle=req.learning_cycle,
         )
         return result
     except (OllamaConnectionError, OllamaTimeoutError) as e:
@@ -600,6 +636,7 @@ def submit_assessment(req: AssessmentSubmitRequest) -> Dict[str, Any]:
         time_taken_seconds=req.time_taken_seconds,
         question_idx=req.question_idx,
         question_id=req.question_id,
+        subtopic_id=req.subtopic_id,
     )
     return result
 
@@ -692,6 +729,10 @@ def generate_practice(req: PracticeGenerateRequest) -> Dict[str, Any]:
             mastery_tier=p_context.mastery_tier,
         )
 
+        # Ensure reference_solution is kept internally on backend and NOT sent in starter code payload
+        challenge_for_client = dict(challenge)
+        challenge_for_client.pop("reference_solution", None)
+
         return {
             "student_id": req.student_id,
             "topic": req.topic,
@@ -702,8 +743,8 @@ def generate_practice(req: PracticeGenerateRequest) -> Dict[str, Any]:
             "accuracy": p_context.accuracy,
             "predicted_mastery_level": p_context.predicted_mastery_level,
             "model": gen_res.model_name,
-            "challenge": challenge,
-            "practice_problems": [challenge],
+            "challenge": challenge_for_client,
+            "practice_problems": [challenge_for_client],
             "practice_content": gen_res.content,
         }
     except (OllamaConnectionError, OllamaTimeoutError):
@@ -729,6 +770,110 @@ def execute_practice_code(req: PracticeExecuteRequest) -> Dict[str, Any]:
             detail="C compiler (GCC) is not available on host system.",
         )
 
+    # Multi-testcase evaluation in submission mode if test_cases provided
+    if req.is_submission and req.test_cases and len(req.test_cases) > 0:
+        all_passed = True
+        failed_tc = None
+        last_res = None
+        for tc in req.test_cases:
+            tc_inp = tc.get("input", "")
+            tc_exp = (tc.get("expected_output") or "").strip()
+            res = executor.execute_student_code(
+                source_code=req.source_code,
+                stdin_input=tc_inp,
+                timeout_seconds=timeout,
+            )
+            last_res = res
+            if res.status != ExecutionStatus.SUCCESS:
+                all_passed = False
+                failed_tc = {
+                    "input": tc_inp,
+                    "expected_output": tc_exp,
+                    "actual_output": (res.stdout or "").strip(),
+                    "status": res.status.value,
+                    "diagnostic_message": f"Execution failed on test case: {res.status.value}",
+                }
+                break
+
+            actual = (res.stdout or "").strip()
+            norm_actual = "\n".join(line.rstrip() for line in actual.replace("\r\n", "\n").splitlines()).strip()
+            norm_expected = "\n".join(line.rstrip() for line in tc_exp.replace("\r\n", "\n").splitlines()).strip()
+            tokens_actual = " ".join(norm_actual.split())
+            tokens_expected = " ".join(norm_expected.split())
+
+            tc_passed = (norm_actual == norm_expected) or (tokens_actual == tokens_expected)
+            if not tc_passed:
+                all_passed = False
+                failed_tc = {
+                    "input": tc_inp,
+                    "expected_output": tc_exp,
+                    "actual_output": actual,
+                    "status": "WRONG_ANSWER",
+                    "diagnostic_message": "Wrong Answer: Output mismatch with expected test case.",
+                }
+                break
+
+        res = last_res
+        if all_passed:
+            status_label = "ACCEPTED"
+            diagnostic_type = "ACCEPTED"
+            diagnostic_message = f"Accepted: All {len(req.test_cases)} test cases passed successfully."
+            actual_output = (res.stdout or "").strip() if res else ""
+            expected_output = (req.test_cases[-1].get("expected_output") or "").strip()
+            stdin_used = req.test_cases[-1].get("input", "")
+            passed = True
+            updated_student = None
+            updated_learning_state = None
+            try:
+                service = get_service()
+                twin_eval = service.evaluate_submission(
+                    student_id=req.student_id,
+                    topic=req.topic,
+                    selected_option="B",
+                    time_taken_seconds=res.execution_time_seconds or 10.0 if res else 10.0,
+                )
+                updated_student = twin_eval.get("updated_student")
+                updated_learning_state = twin_eval.get("updated_learning_state")
+            except Exception:
+                pass
+        else:
+            status_label = failed_tc.get("status", "WRONG_ANSWER") if failed_tc else "WRONG_ANSWER"
+            diagnostic_type = status_label
+            diagnostic_message = failed_tc.get("diagnostic_message", "Wrong Answer: Output mismatch with expected test case.") if failed_tc else "Wrong Answer"
+            actual_output = failed_tc.get("actual_output", "") if failed_tc else ""
+            expected_output = failed_tc.get("expected_output", "") if failed_tc else ""
+            stdin_used = failed_tc.get("input", "") if failed_tc else ""
+            passed = False
+            updated_student = None
+            updated_learning_state = None
+
+        notes_str = (res.notes or "") if res else ""
+
+        return {
+            "status": status_label,
+            "diagnostic_type": diagnostic_type,
+            "diagnostic_message": diagnostic_message,
+            "success": (res.status == ExecutionStatus.SUCCESS) if res else False,
+            "passed": passed,
+            "exit_code": res.exit_code if res else 0,
+            "compiler_output": (res.compiler_output or "") if res else "",
+            "stdout": (res.stdout or "") if res else "",
+            "stderr": (res.stderr or "") if res else "",
+            "execution_time_seconds": res.execution_time_seconds if res else 0.0,
+            "timeout_limit_seconds": timeout,
+            "actual_output": actual_output,
+            "expected_output": expected_output if expected_output else None,
+            "stdin_input": stdin_used,
+            "input": stdin_used,
+            "notes": notes_str.strip(),
+            "is_submission": req.is_submission,
+            "student_id": req.student_id,
+            "topic": req.topic,
+            "updated_student": updated_student,
+            "updated_learning_state": updated_learning_state,
+        }
+
+    # Standard single test case execution (Run mode or single submission)
     res = executor.execute_student_code(
         source_code=req.source_code,
         stdin_input=req.stdin_input,
@@ -771,7 +916,7 @@ def execute_practice_code(req: PracticeExecuteRequest) -> Dict[str, Any]:
             tokens_actual = " ".join(norm_actual.split())
             tokens_expected = " ".join(norm_expected.split())
             if expected_output:
-                passed = (norm_actual == norm_expected) or (tokens_actual == tokens_expected) or (norm_expected in norm_actual)
+                passed = (norm_actual == norm_expected) or (tokens_actual == tokens_expected)
                 if passed:
                     status_label = "ACCEPTED"
                     diagnostic_type = "ACCEPTED"
@@ -830,6 +975,8 @@ def execute_practice_code(req: PracticeExecuteRequest) -> Dict[str, Any]:
         "timeout_limit_seconds": timeout,
         "actual_output": actual_output,
         "expected_output": expected_output if req.expected_output else None,
+        "stdin_input": req.stdin_input or "",
+        "input": req.stdin_input or "",
         "notes": notes_str.strip(),
         "is_submission": req.is_submission,
         "student_id": req.student_id,
@@ -930,6 +1077,114 @@ def search_curriculum(req: CurriculumSearchRequest) -> Dict[str, Any]:
         return {"query": req.query, "results": results, "count": len(results)}
     except Exception as e:
         return {"query": req.query, "results": [], "count": 0, "error": str(e)}
+
+
+@app.get("/api/curriculum/tree")
+def get_curriculum_tree() -> Dict[str, Any]:
+    """Return complete PPS syllabus tree with parent topics and ordered subtopics."""
+    from eduadapt.curriculum.pps_curriculum import get_curriculum_tree_summary
+    return get_curriculum_tree_summary()
+
+
+@app.get("/api/curriculum/subtopics/{topic}")
+def get_subtopics(topic: str) -> List[Dict[str, Any]]:
+    """Return subtopics registered under a parent PPS curriculum topic."""
+    from eduadapt.curriculum.pps_curriculum import get_subtopics_for_topic
+    subtopics = get_subtopics_for_topic(topic)
+    return [s.to_dict() for s in subtopics]
+
+
+@app.get("/api/subtopics/progress/{student_id}/{topic}")
+def get_subtopic_progress(student_id: str, topic: str) -> Dict[str, Any]:
+    """Retrieve persistent subtopic learning progress and adaptive cycle states for student."""
+    service = get_service()
+    return service.subtopic_service.get_topic_progress(
+        student_id=student_id,
+        topic=topic,
+        overall_mastery=0.0,
+    )
+
+
+@app.get("/api/subtopics/roadmap/{student_id}/{topic}")
+def get_subtopic_roadmap(student_id: str, topic: str) -> Dict[str, Any]:
+    """Retrieve subtopic progression roadmap with granular statuses (LOCKED, UNLOCKED, IN_PROGRESS, etc.)."""
+    service = get_service()
+    return service.subtopic_service.get_student_subtopic_roadmap(student_id, topic)
+
+
+@app.post("/api/subtopics/reading/complete")
+def mark_subtopic_reading_complete(req: SubtopicReadingCompleteRequest) -> Dict[str, Any]:
+    """Mark genuine reading completion for an unlocked or active subtopic."""
+    service = get_service()
+    try:
+        updated_sub = service.subtopic_service.mark_reading_complete(
+            student_id=req.student_id,
+            topic=req.topic,
+            subtopic_id=req.subtopic_id,
+        )
+        return {
+            "status": "success",
+            "student_id": req.student_id,
+            "topic": req.topic,
+            "subtopic_id": req.subtopic_id,
+            "subtopic": updated_sub,
+            "roadmap": service.subtopic_service.get_student_subtopic_roadmap(req.student_id, req.topic),
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to record reading completion: {str(e)}")
+
+
+@app.post("/api/subtopics/mastery-check/submit")
+def submit_subtopic_mastery_check(req: SubtopicMasteryCheckRequest) -> Dict[str, Any]:
+    """Authoritatively evaluate mandatory subtopic mastery-check question and unlock next subtopic upon success."""
+    service = get_service()
+    try:
+        eval_result = service.subtopic_service.evaluate_mastery_check(
+            student_id=req.student_id,
+            topic=req.topic,
+            subtopic_id=req.subtopic_id,
+            selected_option=req.selected_option,
+            time_taken_seconds=req.time_taken_seconds,
+            custom_question=req.custom_question,
+            is_remedial=req.is_remedial,
+        )
+        eval_result["roadmap"] = service.subtopic_service.get_student_subtopic_roadmap(req.student_id, req.topic)
+        return eval_result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to evaluate subtopic mastery check: {str(e)}")
+
+
+@app.post("/api/subtopics/reset")
+def reset_subtopic_progress(req: SubtopicResetRequest) -> Dict[str, Any]:
+    """Reset a student's subtopic progress back to strict baseline (subtopic 1 UNLOCKED, 2..N LOCKED)."""
+    service = get_service()
+    service.subtopic_service.reset_topic_progress(req.student_id, req.topic)
+    return {
+        "status": "reset",
+        "student_id": req.student_id,
+        "topic": req.topic,
+        "roadmap": service.subtopic_service.get_student_subtopic_roadmap(req.student_id, req.topic),
+    }
+
+
+@app.post("/api/subtopics/cycle/advance")
+def advance_subtopic_cycle(req: CycleAdvanceRequest) -> Dict[str, Any]:
+    """Record an adaptive cycle attempt, assess mastery evidence, and advance cycle or unlock next subtopic."""
+    service = get_service()
+    return service.subtopic_service.record_cycle_attempt(
+        student_id=req.student_id,
+        topic=req.topic,
+        subtopic_id=req.subtopic_id,
+        score=req.score,
+        is_correct=req.is_correct,
+        accuracy=1.0 if req.is_correct else 0.0,
+        weak_concepts=req.weak_concepts or [],
+        error_category="CONCEPTUAL" if not req.is_correct else None,
+    )
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import MermaidDiagram from './MermaidDiagram';
-import { synthesizeLessonAudio } from '../api/learningApi';
+import { synthesizeLessonAudio, markSubtopicReadingComplete, submitSubtopicMasteryCheck } from '../api/learningApi';
 
 /**
  * Normalizes text by removing raw escaped newlines and outer quotation marks.
@@ -558,8 +558,13 @@ export default function TeachingContent({
   teaching,
   studentProfile,
   currentTopic,
+  subtopicId,
+  subtopicTitle,
+  subtopicState,
   onNavigate,
   onOpenTutorWithCode,
+  onMasteryCheckPassed,
+  onReadingCompleted,
 }) {
   const topic = currentTopic || 'Pointers';
   const difficulty = studentProfile?.recommended_difficulty || 'Adaptive';
@@ -570,6 +575,101 @@ export default function TeachingContent({
   const personalizationBullets = teaching?.personalization_bullets || [];
 
   const lesson = extractLessonData(teaching, topic);
+  const activeSubtopicId = subtopicId || teaching?.subtopic_id;
+
+  // Reading completion state
+  const [readingCompleted, setReadingCompleted] = useState(Boolean(subtopicState?.reading_completed));
+  const [isMarkingReading, setIsMarkingReading] = useState(false);
+  const [readingError, setReadingError] = useState(null);
+
+  // Understanding check interactive state
+  const [currentQuestion, setCurrentQuestion] = useState(lesson.understandingCheck);
+  const [isRemedial, setIsRemedial] = useState(false);
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [submittedCheck, setSubmittedCheck] = useState(false);
+  const [isCorrect, setIsCorrect] = useState(null);
+  const [evalResult, setEvalResult] = useState(null);
+  const [isSubmittingCheck, setIsSubmittingCheck] = useState(false);
+  const [checkError, setCheckError] = useState(null);
+
+  // Sync state when topic or subtopic changes
+  useEffect(() => {
+    setReadingCompleted(Boolean(subtopicState?.reading_completed));
+    setCurrentQuestion(lesson.understandingCheck);
+    setIsRemedial(false);
+    setSelectedOption(null);
+    setSubmittedCheck(false);
+    setIsCorrect(null);
+    setEvalResult(null);
+    setCheckError(null);
+    setReadingError(null);
+  }, [topic, activeSubtopicId, subtopicState]);
+
+  const handleMarkReadingComplete = async () => {
+    if (!activeSubtopicId) return;
+    setIsMarkingReading(true);
+    setReadingError(null);
+    try {
+      const res = await markSubtopicReadingComplete(studentId, topic, activeSubtopicId);
+      setReadingCompleted(true);
+      if (onReadingCompleted) onReadingCompleted(res);
+    } catch (err) {
+      setReadingError(err.message || 'Could not mark reading complete.');
+    } finally {
+      setIsMarkingReading(false);
+    }
+  };
+
+  const handleSubmitCheck = async () => {
+    if (selectedOption === null || !currentQuestion) return;
+    if (!readingCompleted) {
+      setCheckError('Please mark reading complete above before submitting the mastery check.');
+      return;
+    }
+    setIsSubmittingCheck(true);
+    setCheckError(null);
+    try {
+      const options = currentQuestion.options || [];
+      const selectedText = String(options[selectedOption] || '').trim();
+      const res = await submitSubtopicMasteryCheck(
+        studentId,
+        topic,
+        activeSubtopicId,
+        selectedText,
+        25,
+        currentQuestion,
+        isRemedial
+      );
+      setSubmittedCheck(true);
+      setIsCorrect(res.is_correct);
+      setEvalResult(res);
+      if (res.is_correct && onMasteryCheckPassed) {
+        onMasteryCheckPassed(res);
+      }
+    } catch (err) {
+      setCheckError(err.message || 'Error submitting mastery check.');
+    } finally {
+      setIsSubmittingCheck(false);
+    }
+  };
+
+  const handleRetryRemedial = () => {
+    if (evalResult?.remedial_question) {
+      setCurrentQuestion(evalResult.remedial_question);
+      setIsRemedial(true);
+    }
+    setSelectedOption(null);
+    setSubmittedCheck(false);
+    setIsCorrect(null);
+    setCheckError(null);
+  };
+
+  const handleResetCheck = () => {
+    setSelectedOption(null);
+    setSubmittedCheck(false);
+    setIsCorrect(null);
+    setCheckError(null);
+  };
 
   // Copy code feedback state with clipboard fallback
   const [copied, setCopied] = useState(false);
@@ -603,60 +703,6 @@ export default function TeachingContent({
     } catch {
       // Ignored
     }
-  };
-
-  // Understanding check interactive state
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [submittedCheck, setSubmittedCheck] = useState(false);
-  const [isCorrect, setIsCorrect] = useState(null);
-
-  // Reset check when topic changes
-  useEffect(() => {
-    setSelectedOption(null);
-    setSubmittedCheck(false);
-    setIsCorrect(null);
-  }, [topic]);
-
-  const handleSubmitCheck = () => {
-    if (selectedOption === null || !lesson.understandingCheck) return;
-    const options = lesson.understandingCheck.options || [];
-    const userSelectedText = String(options[selectedOption] || '').trim();
-    const correctRaw = String(
-      lesson.understandingCheck.correct_answer ||
-      lesson.understandingCheck.correct_option ||
-      lesson.understandingCheck.answer ||
-      lesson.understandingCheck.correct ||
-      ''
-    ).trim();
-
-    if (!correctRaw) {
-      setIsCorrect(true);
-      setSubmittedCheck(true);
-      return;
-    }
-
-    const userSelectedLower = userSelectedText.toLowerCase();
-    const correctLower = correctRaw.toLowerCase();
-
-    // Check letter match (e.g. "B" vs "B) 25")
-    const selectedLetter = userSelectedText.charAt(0).toUpperCase();
-    const correctLetter = correctRaw.charAt(0).toUpperCase();
-    const isLetterKey = correctRaw.length === 1 && /[A-D]/i.test(correctRaw);
-    const letterMatches = isLetterKey && selectedLetter === correctLetter;
-
-    // Check text/substring match
-    const textMatches = userSelectedLower === correctLower ||
-      (correctLower.length > 3 && userSelectedLower.includes(correctLower)) ||
-      (userSelectedLower.length > 3 && correctLower.includes(userSelectedLower));
-
-    setIsCorrect(letterMatches || textMatches);
-    setSubmittedCheck(true);
-  };
-
-  const handleResetCheck = () => {
-    setSelectedOption(null);
-    setSubmittedCheck(false);
-    setIsCorrect(null);
   };
 
   // Audio reader state
@@ -1116,39 +1162,86 @@ export default function TeachingContent({
           </div>
         )}
 
-        {/* SECTION 7: INTERACTIVE QUICK UNDERSTANDING CHECK */}
-        {lesson.understandingCheck && (
+        {/* READING PROGRESS & COMPLETION VERIFICATION */}
+        <div
+          className="card"
+          style={{
+            marginBottom: '20px',
+            padding: '14px 18px',
+            backgroundColor: readingCompleted ? 'rgba(34, 197, 94, 0.08)' : 'rgba(59, 130, 246, 0.08)',
+            border: `1px solid ${readingCompleted ? 'var(--color-green)' : 'var(--color-blue)'}`,
+            borderRadius: 'var(--radius-sm)',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: '13px', color: readingCompleted ? 'var(--color-green)' : 'var(--color-blue)' }}>
+                {readingCompleted ? '✓ Reading Requirement Completed' : '📖 Step 1: Read Learning Content'}
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>
+                {readingCompleted
+                  ? 'You have satisfied the reading requirement. Complete the mastery check below to unlock the next subtopic.'
+                  : 'Read all sections of this subtopic above, then click the button to verify reading completion and unlock the mastery check.'}
+              </div>
+            </div>
+            {!readingCompleted && (
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={handleMarkReadingComplete}
+                disabled={isMarkingReading}
+                style={{ padding: '7px 14px', fontSize: '12px' }}
+              >
+                {isMarkingReading ? 'Verifying...' : 'Mark Reading Complete ✓'}
+              </button>
+            )}
+          </div>
+          {readingError && (
+            <div style={{ color: 'var(--color-red)', fontSize: '11px', marginTop: '6px' }}>{readingError}</div>
+          )}
+        </div>
+
+        {/* SECTION 7: MANDATORY SUBTOPIC MASTERY CHECK */}
+        {currentQuestion && (
           <div
             style={{
               marginBottom: '26px',
-              padding: '16px 18px',
-              background: 'var(--color-surface-subtle)',
+              padding: '18px 20px',
+              background: 'var(--color-surface)',
               border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-sm)',
+              borderRadius: 'var(--radius-md)',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
             }}
             role="region"
             aria-labelledby="section-quick-check"
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-              <h3
-                id="section-quick-check"
-                style={{
-                  fontSize: '15px',
-                  fontWeight: 700,
-                  color: 'var(--color-text-primary)',
-                  margin: 0,
-                }}
-              >
-                Quick Understanding Check
-              </h3>
-              <span className="badge-blue">Interactive Concept Check</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '6px' }}>
+              <div>
+                <h3
+                  id="section-quick-check"
+                  style={{
+                    fontSize: '15px',
+                    fontWeight: 700,
+                    color: 'var(--color-text-primary)',
+                    margin: 0,
+                  }}
+                >
+                  {isRemedial ? 'Targeted Remedial Mastery Check' : 'Mandatory Subtopic Mastery Check'}
+                </h3>
+                <span style={{ fontSize: '11px', color: 'var(--color-text-secondary)' }}>
+                  Subtopic: <strong>{subtopicTitle || topic}</strong>
+                </span>
+              </div>
+              <span className={readingCompleted ? 'badge-blue' : 'badge-gray'}>
+                {readingCompleted ? 'Gate Ready' : 'Locked: Reading Required'}
+              </span>
             </div>
 
-            <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: '12px' }}>
-              {lesson.understandingCheck.question}
+            <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: '14px' }}>
+              {currentQuestion.question}
             </p>
 
-            {lesson.understandingCheck.code_snippet && (
+            {currentQuestion.code_snippet && (
               <pre
                 style={{
                   background: '#0f172a',
@@ -1161,12 +1254,12 @@ export default function TeachingContent({
                   overflowX: 'auto',
                 }}
               >
-                <code>{lesson.understandingCheck.code_snippet}</code>
+                <code>{currentQuestion.code_snippet}</code>
               </pre>
             )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
-              {lesson.understandingCheck.options.map((opt, optIdx) => {
+              {(currentQuestion.options || []).map((opt, optIdx) => {
                 const isSelected = selectedOption === optIdx;
                 return (
                   <label
@@ -1175,23 +1268,24 @@ export default function TeachingContent({
                       display: 'flex',
                       alignItems: 'center',
                       gap: '10px',
-                      padding: '8px 12px',
-                      background: isSelected ? 'var(--color-blue-light)' : '#ffffff',
+                      padding: '10px 14px',
+                      background: isSelected ? 'rgba(59, 130, 246, 0.08)' : '#ffffff',
                       border: `1px solid ${isSelected ? 'var(--color-blue)' : 'var(--color-border)'}`,
                       borderRadius: 'var(--radius-sm)',
-                      cursor: submittedCheck ? 'default' : 'pointer',
+                      cursor: submittedCheck || !readingCompleted ? 'not-allowed' : 'pointer',
+                      opacity: !readingCompleted ? 0.6 : 1.0,
                       fontSize: '13px',
                       color: 'var(--color-text-primary)',
-                      transition: 'all 0.1s ease',
+                      transition: 'all 0.15s ease',
                     }}
                   >
                     <input
                       type="radio"
                       name="understanding-check-option"
                       checked={isSelected}
-                      disabled={submittedCheck}
+                      disabled={submittedCheck || !readingCompleted}
                       onChange={() => setSelectedOption(optIdx)}
-                      style={{ cursor: submittedCheck ? 'default' : 'pointer' }}
+                      style={{ cursor: submittedCheck || !readingCompleted ? 'not-allowed' : 'pointer' }}
                     />
                     <span>{opt}</span>
                   </label>
@@ -1199,45 +1293,84 @@ export default function TeachingContent({
               })}
             </div>
 
+            {checkError && (
+              <div style={{ color: 'var(--color-red)', fontSize: '12px', marginBottom: '10px' }}>{checkError}</div>
+            )}
+
             {!submittedCheck ? (
               <button
                 type="button"
                 className="btn-primary"
                 onClick={handleSubmitCheck}
-                disabled={selectedOption === null}
-                style={{ padding: '6px 14px', fontSize: '13px' }}
+                disabled={selectedOption === null || !readingCompleted || isSubmittingCheck}
+                style={{ padding: '8px 18px', fontSize: '13px' }}
               >
-                Check Answer
+                {isSubmittingCheck ? 'Evaluating Answer...' : 'Submit Mastery Check'}
               </button>
             ) : (
               <div>
                 <div
                   style={{
-                    padding: '10px 14px',
+                    padding: '14px 16px',
                     borderRadius: 'var(--radius-sm)',
-                    marginBottom: '10px',
-                    background: isCorrect ? 'var(--color-green-light)' : 'var(--color-red-light)',
-                    border: `1px solid ${isCorrect ? 'var(--color-green-border)' : 'var(--color-red-border)'}`,
-                    color: isCorrect ? 'var(--color-green)' : 'var(--color-red)',
+                    marginBottom: '12px',
+                    background: isCorrect ? 'rgba(34, 197, 94, 0.08)' : 'rgba(239, 68, 68, 0.08)',
+                    border: `1px solid ${isCorrect ? 'var(--color-green)' : 'var(--color-red)'}`,
                     fontSize: '13px',
                   }}
                 >
-                  <div style={{ fontWeight: 700, marginBottom: '4px' }}>
-                    {isCorrect ? '✓ Correct! Great job.' : '✗ Not quite right.'}
+                  <div style={{ fontWeight: 700, color: isCorrect ? 'var(--color-green)' : 'var(--color-red)', marginBottom: '6px', fontSize: '14px' }}>
+                    {isCorrect ? '✓ Mastery Gate Passed! Next subtopic unlocked.' : '✗ Misconception Detected'}
                   </div>
-                  <div>
-                    {lesson.understandingCheck.explanation ||
-                      `Correct Answer: ${lesson.understandingCheck.correct_answer || lesson.understandingCheck.correct_option || 'Verified Answer'}`}
-                  </div>
+                  {isCorrect ? (
+                    <div>
+                      <p style={{ margin: '0 0 6px 0', color: 'var(--color-text-primary)' }}>
+                        {evalResult?.explanation || currentQuestion.explanation}
+                      </p>
+                      <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)' }}>
+                        Evidence Score: <strong>{evalResult?.score || 100}%</strong> • Subtopic Mastery: <strong>{evalResult?.mastery || '0.90'}</strong> • Status: <strong>{evalResult?.status || 'COMPLETED'}</strong>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <p style={{ margin: '0 0 6px 0', color: 'var(--color-text-primary)', fontWeight: 500 }}>
+                        {evalResult?.misconception || 'Your selected answer indicates an incomplete mental model for this subtopic.'}
+                      </p>
+                      <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+                        <strong>Correct Answer:</strong> {evalResult?.correct_option || currentQuestion.correct_option || currentQuestion.correct_answer}
+                      </p>
+                      <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+                        <strong>Remedial Review:</strong> {evalResult?.explanation || currentQuestion.explanation}
+                      </p>
+                      <div style={{ fontSize: '11px', color: 'var(--color-red)' }}>
+                        Next subtopic remains locked until mastery is demonstrated. Review the feedback and try again.
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  onClick={handleResetCheck}
-                  style={{ padding: '5px 12px', fontSize: '12px' }}
-                >
-                  Try Again
-                </button>
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {!isCorrect && evalResult?.remedial_question && (
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      onClick={handleRetryRemedial}
+                      style={{ padding: '6px 14px', fontSize: '12px' }}
+                    >
+                      Try Remedial Question ⟳
+                    </button>
+                  )}
+                  {!isCorrect && !evalResult?.remedial_question && (
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      onClick={handleResetCheck}
+                      style={{ padding: '6px 14px', fontSize: '12px' }}
+                    >
+                      Retry Question
+                    </button>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -1266,7 +1399,7 @@ export default function TeachingContent({
               }
             }}
           >
-            Ask AI Tutor ?
+            Ask AI Tutor 💬
           </button>
 
           <div style={{ display: 'flex', gap: '10px' }}>

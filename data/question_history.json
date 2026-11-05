@@ -297,6 +297,242 @@
         "weak_concepts": [
           "Address-Of Operator"
         ]
+      },
+      {
+        "timestamp": "2026-11-04T11:47:48.967816",
+        "topic": "Pointers",
+        "score": 100,
+        "accuracy": 1.0,
+        "correct_count": 5,
+        "total_questions": 5,
+        "time_taken_seconds": 30,
+        "weak_concepts": []
+      },
+      {
+        "timestamp": "2026-11-04T11:47:48.997904",
+        "topic": "Pointers",
+        "score": 80,
+        "accuracy": 0.8,
+        "correct_count": 4,
+        "total_questions": 5,
+        "time_taken_seconds": 45,
+        "weak_concepts": [
+          "Address-Of Operator"
+        ]
+      },
+      {
+        "timestamp": "2026-11-04T12:11:29.955651",
+        "topic": "Pointers",
+        "score": 100,
+        "accuracy": 1.0,
+        "correct_count": 5,
+        "total_questions": 5,
+        "time_taken_seconds": 30,
+        "weak_concepts": []
+      },
+      {
+        "timestamp": "2026-11-04T12:11:29.997168",
+        "topic": "Pointers",
+        "score": 80,
+        "accuracy": 0.8,
+        "correct_count": 4,
+        "total_questions": 5,
+        "time_taken_seconds": 45,
+        "weak_concepts": [
+          "Address-Of Operator"
+        ]
+      },
+      {
+        "timestamp": "2026-11-04T12:29:30.576146",
+        "topic": "Pointers",
+        "score": 100,
+        "accuracy": 1.0,
+        "correct_count": 5,
+        "total_questions": 5,
+        "time_taken_seconds": 30,
+        "weak_concepts": []
+      },
+      {
+        "timestamp": "2026-11-04T12:29:30.613235",
+        "topic": "Pointers",
+        "score": 80,
+        "accuracy": 0.8,
+        "correct_count": 4,
+        "total_questions": 5,
+        "time_taken_seconds": 45,
+        "weak_concepts": [
+          "Address-Of Operator"
+        ]
+      },
+      {
+        "timestamp": "2026-11-04T12:55:24.267144",
+        "topic": "Pointers",
+        "score": 100,
+        "accuracy": 1.0,
+        "correct_count": 5,
+        "total_questions": 5,
+        "time_taken_seconds": 30,
+        "weak_concepts": []
+      },
+      {
+        "timestamp": "2026-11-04T12:55:24.307986",
+        "topic": "Pointers",
+        "score": 80,
+        "accuracy": 0.8,
+        "correct_count": 4,
+        "total_questions": 5,
+        "time_taken_seconds": 45,
+        "weak_concepts": [
+          "Address-Of Operator"
+        ]
+      },
+      {
+        "timestamp": "2026-11-04T12:57:22.991944",
+        "topic": "Pointers",
+        "score": 100,
+        "accuracy": 1.0,
+        "correct_count": 5,
+        "total_questions": 5,
+        "time_taken_seconds": 30,
+        "weak_concepts": []
+      },
+      {
+        "timestamp": "2026-11-04T12:57:23.037582",
+        "topic": "Pointers",
+        "score": 80,
+        "accuracy": 0.8,
+        "correct_count": 4,
+        "total_questions": 5,
+        "time_taken_seconds": 45,
+        "weak_concepts": [
+          "Address-Of Operator"
+        ]
+      },
+      {
+        "timestamp": "2026-11-04T13:01:07.903473",
+        "topic": "Operators and Expressions",
+        "score": 0,
+        "accuracy": 0.0,
+        "correct_count": 0,
+        "total_questions": 5,
+        "time_taken_seconds": 12,
+        "weak_concepts": [
+          "Arithmetic Modulo",
+          "Increment Operators",
+          "Operator Precedence",
+          "Bitwise Left Shift",
+          "Assignment vs Equality"
+        ]
+      },
+      {
+        "timestamp": "2026-11-04T13:22:18.327426",
+        "topic": "Pointers",
+        "score": 100,
+        "accuracy": 1.0,
+        "correct_count": 5,
+        "total_questions": 5,
+        "time_taken_seconds": 30,
+        "weak_concepts": []
+      },
+      {
+        "timestamp": "2026-11-04T13:22:18.368051",
+        "topic": "Pointers",
+        "score": 80,
+        "accuracy": 0.8,
+        "correct_count": 4,
+        "total_questions": 5,
+        "time_taken_seconds": 45,
+        "weak_concepts": [
+          "Address-Of Operator"
+        ]
+      },
+      {
+        "timestamp": "2026-11-04T13:25:52.587893",
+        "topic": "Pointers",
+        "score": 100,
+        "accuracy": 1.0,
+        "correct_count": 5,
+        "total_questions": 5,
+        "time_taken_seconds": 30,
+        "weak_concepts": []
+      },
+      {
+        "timestamp": "2026-11-04T13:25:52.630253",
+        "topic": "Pointers",
+        "score": 80,
+        "accuracy": 0.8,
+        "correct_count": 4,
+        "total_questions": 5,
+        "time_taken_seconds": 45,
+        "weak_concepts": [
+          "Address-Of Operator"
+        ]
+      },
+      {
+        "timestamp": "2026-11-04T13:44:26.701079",
+        "topic": "Pointers",
+        "score": 100,
+        "accuracy": 1.0,
+        "correct_count": 5,
+        "total_questions": 5,
+        "time_taken_seconds": 30,
+        "weak_concepts": []
+      },
+      {
+        "timestamp": "2026-11-04T13:44:26.743706",
+        "topic": "Pointers",
+        "score": 80,
+        "accuracy": 0.8,
+        "correct_count": 4,
+        "total_questions": 5,
+        "time_taken_seconds": 45,
+        "weak_concepts": [
+          "Address-Of Operator"
+        ]
+      },
+      {
+        "timestamp": "2026-11-04T13:46:59.892089",
+        "topic": "Pointers",
+        "score": 100,
+        "accuracy": 1.0,
+        "correct_count": 5,
+        "total_questions": 5,
+        "time_taken_seconds": 30,
+        "weak_concepts": []
+      },
+      {
+        "timestamp": "2026-11-04T13:46:59.936647",
+        "topic": "Pointers",
+        "score": 80,
+        "accuracy": 0.8,
+        "correct_count": 4,
+        "total_questions": 5,
+        "time_taken_seconds": 45,
+        "weak_concepts": [
+          "Address-Of Operator"
+        ]
+      },
+      {
+        "timestamp": "2026-11-04T13:49:00.508945",
+        "topic": "Pointers",
+        "score": 100,
+        "accuracy": 1.0,
+        "correct_count": 5,
+        "total_questions": 5,
+        "time_taken_seconds": 30,
+        "weak_concepts": []
+      },
+      {
+        "timestamp": "2026-11-04T13:49:00.555607",
+        "topic": "Pointers",
+        "score": 80,
+        "accuracy": 0.8,
+        "correct_count": 4,
+        "total_questions": 5,
+        "time_taken_seconds": 45,
+        "weak_concepts": [
+          "Address-Of Operator"
+        ]
       }
     ],
     "assessments": [
@@ -484,10 +720,199 @@
           "Pointer Decay Exclusions"
         ],
         "next_topic": "Structures"
+      },
+      {
+        "timestamp": "2026-11-04T11:47:49.041447",
+        "topic": "Pointers",
+        "score": 80,
+        "accuracy": 0.8,
+        "correct_count": 8,
+        "total_questions": 10,
+        "mastery_achieved": true,
+        "time_taken_seconds": 120,
+        "weak_concepts": [
+          "Dangling Pointer Remediation",
+          "Pointer Decay Exclusions"
+        ],
+        "next_topic": "Structures"
+      },
+      {
+        "timestamp": "2026-11-04T12:11:30.047231",
+        "topic": "Pointers",
+        "score": 80,
+        "accuracy": 0.8,
+        "correct_count": 8,
+        "total_questions": 10,
+        "mastery_achieved": true,
+        "time_taken_seconds": 120,
+        "weak_concepts": [
+          "Dangling Pointer Remediation",
+          "Pointer Decay Exclusions"
+        ],
+        "next_topic": "Structures"
+      },
+      {
+        "timestamp": "2026-11-04T12:29:30.661616",
+        "topic": "Pointers",
+        "score": 80,
+        "accuracy": 0.8,
+        "correct_count": 8,
+        "total_questions": 10,
+        "mastery_achieved": true,
+        "time_taken_seconds": 120,
+        "weak_concepts": [
+          "Dangling Pointer Remediation",
+          "Pointer Decay Exclusions"
+        ],
+        "next_topic": "Structures"
+      },
+      {
+        "timestamp": "2026-11-04T12:55:24.363094",
+        "topic": "Pointers",
+        "score": 80,
+        "accuracy": 0.8,
+        "correct_count": 8,
+        "total_questions": 10,
+        "mastery_achieved": true,
+        "time_taken_seconds": 120,
+        "weak_concepts": [
+          "Dangling Pointer Remediation",
+          "Pointer Decay Exclusions"
+        ],
+        "next_topic": "Structures"
+      },
+      {
+        "timestamp": "2026-11-04T12:57:23.092087",
+        "topic": "Pointers",
+        "score": 80,
+        "accuracy": 0.8,
+        "correct_count": 8,
+        "total_questions": 10,
+        "mastery_achieved": true,
+        "time_taken_seconds": 120,
+        "weak_concepts": [
+          "Dangling Pointer Remediation",
+          "Pointer Decay Exclusions"
+        ],
+        "next_topic": "Structures"
+      },
+      {
+        "timestamp": "2026-11-04T13:01:40.639606",
+        "topic": "Operators and Expressions",
+        "score": 20,
+        "accuracy": 0.2,
+        "correct_count": 2,
+        "total_questions": 10,
+        "mastery_achieved": false,
+        "time_taken_seconds": 15,
+        "weak_concepts": [
+          "Bitwise XOR Operator",
+          "Precedence: Dereference vs Post-increment",
+          "Compound Assignment Return",
+          "Bitwise NOT Operator",
+          "Right Shift Arithmetic vs Logical",
+          "Sequence Points & C11 Sequencing",
+          "Pointer Comparison Rules",
+          "Precedence: Arrow vs Dot vs Parentheses"
+        ],
+        "next_topic": "Operators and Expressions"
+      },
+      {
+        "timestamp": "2026-11-04T13:22:18.419312",
+        "topic": "Pointers",
+        "score": 80,
+        "accuracy": 0.8,
+        "correct_count": 8,
+        "total_questions": 10,
+        "mastery_achieved": true,
+        "time_taken_seconds": 120,
+        "weak_concepts": [
+          "Dangling Pointer Remediation",
+          "Pointer Decay Exclusions"
+        ],
+        "next_topic": "Structures"
+      },
+      {
+        "timestamp": "2026-11-04T13:25:52.682164",
+        "topic": "Pointers",
+        "score": 80,
+        "accuracy": 0.8,
+        "correct_count": 8,
+        "total_questions": 10,
+        "mastery_achieved": true,
+        "time_taken_seconds": 120,
+        "weak_concepts": [
+          "Dangling Pointer Remediation",
+          "Pointer Decay Exclusions"
+        ],
+        "next_topic": "Structures"
+      },
+      {
+        "timestamp": "2026-11-04T13:44:26.800408",
+        "topic": "Pointers",
+        "score": 80,
+        "accuracy": 0.8,
+        "correct_count": 8,
+        "total_questions": 10,
+        "mastery_achieved": true,
+        "time_taken_seconds": 120,
+        "weak_concepts": [
+          "Dangling Pointer Remediation",
+          "Pointer Decay Exclusions"
+        ],
+        "next_topic": "Structures"
+      },
+      {
+        "timestamp": "2026-11-04T13:46:59.992546",
+        "topic": "Pointers",
+        "score": 80,
+        "accuracy": 0.8,
+        "correct_count": 8,
+        "total_questions": 10,
+        "mastery_achieved": true,
+        "time_taken_seconds": 120,
+        "weak_concepts": [
+          "Dangling Pointer Remediation",
+          "Pointer Decay Exclusions"
+        ],
+        "next_topic": "Structures"
+      },
+      {
+        "timestamp": "2026-11-04T13:49:00.615639",
+        "topic": "Pointers",
+        "score": 80,
+        "accuracy": 0.8,
+        "correct_count": 8,
+        "total_questions": 10,
+        "mastery_achieved": true,
+        "time_taken_seconds": 120,
+        "weak_concepts": [
+          "Dangling Pointer Remediation",
+          "Pointer Decay Exclusions"
+        ],
+        "next_topic": "Structures"
+      },
+      {
+        "timestamp": "2026-11-04T18:32:18.928699",
+        "topic": "Conditionals",
+        "score": 60,
+        "accuracy": 0.6,
+        "correct_count": 6,
+        "total_questions": 10,
+        "mastery_achieved": true,
+        "time_taken_seconds": 168,
+        "weak_concepts": [
+          "Equality vs Assignment Operator",
+          "Default Case Position in Switch",
+          "Chained Relational Operators",
+          "Case Constant Expressions"
+        ],
+        "next_topic": "Loops"
       }
     ],
     "completed_topics": [
-      "Pointers"
+      "Pointers",
+      "Conditionals"
     ]
   },
   "S005": {
@@ -701,6 +1126,216 @@
           "Comma Operator in For Loops"
         ],
         "next_topic": "Loops"
+      },
+      {
+        "timestamp": "2026-11-04T11:47:49.072937",
+        "topic": "Loops",
+        "score": 20,
+        "accuracy": 0.2,
+        "correct_count": 2,
+        "total_questions": 10,
+        "mastery_achieved": false,
+        "time_taken_seconds": 90,
+        "weak_concepts": [
+          "Loop Counter Iteration Count",
+          "For Loop Variable Scope (C99)",
+          "Accidental Empty Loop Body",
+          "Nested Loop Complexity",
+          "Unsigned Loop Underflow",
+          "Loop Invariant Definition",
+          "Goto vs Structured Loop",
+          "Comma Operator in For Loops"
+        ],
+        "next_topic": "Loops"
+      },
+      {
+        "timestamp": "2026-11-04T12:11:30.092963",
+        "topic": "Loops",
+        "score": 20,
+        "accuracy": 0.2,
+        "correct_count": 2,
+        "total_questions": 10,
+        "mastery_achieved": false,
+        "time_taken_seconds": 90,
+        "weak_concepts": [
+          "Loop Counter Iteration Count",
+          "For Loop Variable Scope (C99)",
+          "Accidental Empty Loop Body",
+          "Nested Loop Complexity",
+          "Unsigned Loop Underflow",
+          "Loop Invariant Definition",
+          "Goto vs Structured Loop",
+          "Comma Operator in For Loops"
+        ],
+        "next_topic": "Loops"
+      },
+      {
+        "timestamp": "2026-11-04T12:29:30.709848",
+        "topic": "Loops",
+        "score": 20,
+        "accuracy": 0.2,
+        "correct_count": 2,
+        "total_questions": 10,
+        "mastery_achieved": false,
+        "time_taken_seconds": 90,
+        "weak_concepts": [
+          "Loop Counter Iteration Count",
+          "For Loop Variable Scope (C99)",
+          "Accidental Empty Loop Body",
+          "Nested Loop Complexity",
+          "Unsigned Loop Underflow",
+          "Loop Invariant Definition",
+          "Goto vs Structured Loop",
+          "Comma Operator in For Loops"
+        ],
+        "next_topic": "Loops"
+      },
+      {
+        "timestamp": "2026-11-04T12:55:24.409149",
+        "topic": "Loops",
+        "score": 20,
+        "accuracy": 0.2,
+        "correct_count": 2,
+        "total_questions": 10,
+        "mastery_achieved": false,
+        "time_taken_seconds": 90,
+        "weak_concepts": [
+          "Loop Counter Iteration Count",
+          "For Loop Variable Scope (C99)",
+          "Accidental Empty Loop Body",
+          "Nested Loop Complexity",
+          "Unsigned Loop Underflow",
+          "Loop Invariant Definition",
+          "Goto vs Structured Loop",
+          "Comma Operator in For Loops"
+        ],
+        "next_topic": "Loops"
+      },
+      {
+        "timestamp": "2026-11-04T12:57:23.135581",
+        "topic": "Loops",
+        "score": 20,
+        "accuracy": 0.2,
+        "correct_count": 2,
+        "total_questions": 10,
+        "mastery_achieved": false,
+        "time_taken_seconds": 90,
+        "weak_concepts": [
+          "Loop Counter Iteration Count",
+          "For Loop Variable Scope (C99)",
+          "Accidental Empty Loop Body",
+          "Nested Loop Complexity",
+          "Unsigned Loop Underflow",
+          "Loop Invariant Definition",
+          "Goto vs Structured Loop",
+          "Comma Operator in For Loops"
+        ],
+        "next_topic": "Loops"
+      },
+      {
+        "timestamp": "2026-11-04T13:22:18.466311",
+        "topic": "Loops",
+        "score": 20,
+        "accuracy": 0.2,
+        "correct_count": 2,
+        "total_questions": 10,
+        "mastery_achieved": false,
+        "time_taken_seconds": 90,
+        "weak_concepts": [
+          "Loop Counter Iteration Count",
+          "For Loop Variable Scope (C99)",
+          "Accidental Empty Loop Body",
+          "Nested Loop Complexity",
+          "Unsigned Loop Underflow",
+          "Loop Invariant Definition",
+          "Goto vs Structured Loop",
+          "Comma Operator in For Loops"
+        ],
+        "next_topic": "Loops"
+      },
+      {
+        "timestamp": "2026-11-04T13:25:52.728895",
+        "topic": "Loops",
+        "score": 20,
+        "accuracy": 0.2,
+        "correct_count": 2,
+        "total_questions": 10,
+        "mastery_achieved": false,
+        "time_taken_seconds": 90,
+        "weak_concepts": [
+          "Loop Counter Iteration Count",
+          "For Loop Variable Scope (C99)",
+          "Accidental Empty Loop Body",
+          "Nested Loop Complexity",
+          "Unsigned Loop Underflow",
+          "Loop Invariant Definition",
+          "Goto vs Structured Loop",
+          "Comma Operator in For Loops"
+        ],
+        "next_topic": "Loops"
+      },
+      {
+        "timestamp": "2026-11-04T13:44:26.850625",
+        "topic": "Loops",
+        "score": 20,
+        "accuracy": 0.2,
+        "correct_count": 2,
+        "total_questions": 10,
+        "mastery_achieved": false,
+        "time_taken_seconds": 90,
+        "weak_concepts": [
+          "Loop Counter Iteration Count",
+          "For Loop Variable Scope (C99)",
+          "Accidental Empty Loop Body",
+          "Nested Loop Complexity",
+          "Unsigned Loop Underflow",
+          "Loop Invariant Definition",
+          "Goto vs Structured Loop",
+          "Comma Operator in For Loops"
+        ],
+        "next_topic": "Loops"
+      },
+      {
+        "timestamp": "2026-11-04T13:47:00.046425",
+        "topic": "Loops",
+        "score": 20,
+        "accuracy": 0.2,
+        "correct_count": 2,
+        "total_questions": 10,
+        "mastery_achieved": false,
+        "time_taken_seconds": 90,
+        "weak_concepts": [
+          "Loop Counter Iteration Count",
+          "For Loop Variable Scope (C99)",
+          "Accidental Empty Loop Body",
+          "Nested Loop Complexity",
+          "Unsigned Loop Underflow",
+          "Loop Invariant Definition",
+          "Goto vs Structured Loop",
+          "Comma Operator in For Loops"
+        ],
+        "next_topic": "Loops"
+      },
+      {
+        "timestamp": "2026-11-04T13:49:00.666914",
+        "topic": "Loops",
+        "score": 20,
+        "accuracy": 0.2,
+        "correct_count": 2,
+        "total_questions": 10,
+        "mastery_achieved": false,
+        "time_taken_seconds": 90,
+        "weak_concepts": [
+          "Loop Counter Iteration Count",
+          "For Loop Variable Scope (C99)",
+          "Accidental Empty Loop Body",
+          "Nested Loop Complexity",
+          "Unsigned Loop Underflow",
+          "Loop Invariant Definition",
+          "Goto vs Structured Loop",
+          "Comma Operator in For Loops"
+        ],
+        "next_topic": "Loops"
       }
     ],
     "completed_topics": [],
@@ -825,6 +1460,106 @@
       },
       {
         "timestamp": "2026-11-04T06:17:06.999155",
+        "topic": "Arrays",
+        "score": 100,
+        "accuracy": 1.0,
+        "correct_count": 5,
+        "total_questions": 5,
+        "time_taken_seconds": 50,
+        "weak_concepts": []
+      },
+      {
+        "timestamp": "2026-11-04T11:47:49.176533",
+        "topic": "Arrays",
+        "score": 100,
+        "accuracy": 1.0,
+        "correct_count": 5,
+        "total_questions": 5,
+        "time_taken_seconds": 50,
+        "weak_concepts": []
+      },
+      {
+        "timestamp": "2026-11-04T12:11:30.187188",
+        "topic": "Arrays",
+        "score": 100,
+        "accuracy": 1.0,
+        "correct_count": 5,
+        "total_questions": 5,
+        "time_taken_seconds": 50,
+        "weak_concepts": []
+      },
+      {
+        "timestamp": "2026-11-04T12:29:30.791966",
+        "topic": "Arrays",
+        "score": 100,
+        "accuracy": 1.0,
+        "correct_count": 5,
+        "total_questions": 5,
+        "time_taken_seconds": 50,
+        "weak_concepts": []
+      },
+      {
+        "timestamp": "2026-11-04T12:55:24.491896",
+        "topic": "Arrays",
+        "score": 100,
+        "accuracy": 1.0,
+        "correct_count": 5,
+        "total_questions": 5,
+        "time_taken_seconds": 50,
+        "weak_concepts": []
+      },
+      {
+        "timestamp": "2026-11-04T12:57:23.233204",
+        "topic": "Arrays",
+        "score": 100,
+        "accuracy": 1.0,
+        "correct_count": 5,
+        "total_questions": 5,
+        "time_taken_seconds": 50,
+        "weak_concepts": []
+      },
+      {
+        "timestamp": "2026-11-04T13:22:18.550277",
+        "topic": "Arrays",
+        "score": 100,
+        "accuracy": 1.0,
+        "correct_count": 5,
+        "total_questions": 5,
+        "time_taken_seconds": 50,
+        "weak_concepts": []
+      },
+      {
+        "timestamp": "2026-11-04T13:25:52.827508",
+        "topic": "Arrays",
+        "score": 100,
+        "accuracy": 1.0,
+        "correct_count": 5,
+        "total_questions": 5,
+        "time_taken_seconds": 50,
+        "weak_concepts": []
+      },
+      {
+        "timestamp": "2026-11-04T13:44:26.941205",
+        "topic": "Arrays",
+        "score": 100,
+        "accuracy": 1.0,
+        "correct_count": 5,
+        "total_questions": 5,
+        "time_taken_seconds": 50,
+        "weak_concepts": []
+      },
+      {
+        "timestamp": "2026-11-04T13:47:00.146248",
+        "topic": "Arrays",
+        "score": 100,
+        "accuracy": 1.0,
+        "correct_count": 5,
+        "total_questions": 5,
+        "time_taken_seconds": 50,
+        "weak_concepts": []
+      },
+      {
+        "timestamp": "2026-11-04T13:49:00.769168",
         "topic": "Arrays",
         "score": 100,
         "accuracy": 1.0,

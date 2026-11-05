@@ -50,12 +50,16 @@ class PersonalizedContentGenerator:
         performance_history: Optional[str] = None,
         additional_context: str = "",
         learning_state: Optional[Dict[str, Any]] = None,
+        subtopic: Optional[str] = None,
+        learning_cycle: Optional[int] = None,
+        remediation_focus: Optional[str] = None,
+        subtopic_state: Optional[Dict[str, Any]] = None,
     ) -> GenerationResult:
         """Generate a personalized explanation tailored to a student's real mastery profile.
 
         Pedagogical grounding:
-        Adapts instruction according to student mastery state, performance history,
-        known misconceptions, and dynamically derived instructional strategy.
+        Adapts instruction according to student mastery state, subtopic level, learning cycle,
+        performance history, known misconceptions, and dynamically derived instructional strategy.
         Embeds native Mermaid diagram directives and records observable generation metadata.
         """
         # 1. Derive deterministic personalization context
@@ -64,6 +68,10 @@ class PersonalizedContentGenerator:
             topic=topic,
             learning_state=learning_state,
             performance_history=performance_history,
+            subtopic=subtopic,
+            learning_cycle=learning_cycle,
+            remediation_focus=remediation_focus,
+            subtopic_state=subtopic_state,
         )
 
         misconceptions_str = (
@@ -76,12 +84,37 @@ class PersonalizedContentGenerator:
             or f"Pace: {p_context.learning_pace}, Current topic: {student_profile.current_topic}, Predicted: {p_context.predicted_mastery_level}"
         )
 
+        effective_subtopic = p_context.subtopic or topic
+        effective_sub_mastery = p_context.subtopic_mastery if p_context.subtopic_mastery is not None else p_context.topic_mastery
+
+        # Tier-specific instruction
+        if p_context.mastery_tier == "Beginner":
+            tier_instruction = (
+                "Teach this subtopic from the foundations. Assume the learner may not understand prerequisite concepts. "
+                "Explain every essential concept step by step. Use simple C examples, intuitive memory explanations, and guided practice. "
+                "Identify likely misconceptions. Do not jump to advanced concepts until foundational understanding is demonstrated."
+            )
+        elif p_context.mastery_tier == "Intermediate":
+            tier_instruction = (
+                "Assume the learner has satisfactory foundational knowledge. Avoid lengthy elementary explanations. "
+                "Teach the deeper mechanics, practical applications, moderate-complexity code examples, output tracing, and common mistakes."
+            )
+        else:
+            tier_instruction = (
+                "Assume the learner has strong foundational mastery. Focus on advanced applications, complex code reasoning, "
+                "difficult edge cases, debugging, and challenging assessment questions. Avoid repetitive beginner explanations."
+            )
+
+        if p_context.remediation_focus:
+            tier_instruction += f"\nTargeted Remediation Directive: Focus specifically on resolving: {p_context.remediation_focus}."
+
         # 2. Retrieve curriculum context via RAG if available
         context_str = additional_context
         retrieved_count = 0
         if self.rag is not None:
             try:
-                rag_context = self.rag.retrieve(query=topic, top_k=3)
+                rag_query = f"{topic} {effective_subtopic}" if effective_subtopic != topic else topic
+                rag_context = self.rag.retrieve(query=rag_query, top_k=3)
                 retrieved_count = len(rag_context.documents)
                 formatted_rag = rag_context.format_for_prompt()
                 if context_str:
@@ -106,16 +139,22 @@ class PersonalizedContentGenerator:
             prompt = template.render(
                 student_id=p_context.student_id,
                 topic=topic,
+                subtopic=effective_subtopic,
+                subtopic_mastery=f"{effective_sub_mastery:.2f}",
                 topic_mastery=f"{p_context.topic_mastery:.2f}",
                 mastery_tier=p_context.mastery_tier,
                 overall_mastery=f"{p_context.overall_mastery:.2f}",
                 predicted_mastery_level=p_context.predicted_mastery_level,
+                learning_cycle=p_context.learning_cycle,
+                max_cycles=p_context.max_cycles,
+                remediation_focus=p_context.remediation_focus or "None (Standard Progression)",
+                tier_instruction=tier_instruction,
                 learning_pace=p_context.learning_pace,
                 learning_style=p_context.preferred_learning_style,
                 recommended_difficulty=p_context.recommended_difficulty,
                 misconceptions=misconceptions_str,
                 performance_signal=history_str,
-                learning_objective=f"Understand the mechanics, memory representation, and syntax of {topic} in C.",
+                learning_objective=f"Understand the mechanics, memory representation, and syntax of {effective_subtopic} in standard C99.",
                 curriculum_context=context_str,
                 pattern_name=p_context.pattern_name,
                 explanation_depth=strat.explanation_depth if strat else "balanced",
@@ -126,7 +165,7 @@ class PersonalizedContentGenerator:
                 scaffolding_level=strat.scaffolding_level if strat else "standard",
                 practice_complexity=strat.practice_complexity if strat else "moderate",
                 revision_strategy=strat.revision_strategy if strat else "review checks",
-                diagram_directive=strat.diagram_recommendation if strat else f"Generate a clean Mermaid diagram for {topic}",
+                diagram_directive=strat.diagram_recommendation if strat else f"Generate a clean Mermaid diagram for {effective_subtopic}",
             )
             prompt_rendered = True
         except KeyError:
@@ -172,9 +211,14 @@ class PersonalizedContentGenerator:
         metadata.update({
             "student_id": p_context.student_id,
             "topic": topic,
+            "subtopic": effective_subtopic,
             "actual_mastery_used": p_context.topic_mastery,
+            "subtopic_mastery": effective_sub_mastery,
             "overall_mastery": p_context.overall_mastery,
             "mastery_tier": p_context.mastery_tier,
+            "learning_cycle": p_context.learning_cycle,
+            "max_cycles": p_context.max_cycles,
+            "remediation_focus": p_context.remediation_focus,
             "learning_pace": p_context.learning_pace,
             "pattern_name": p_context.pattern_name,
             "selected_strategy": strategy_dict,
@@ -207,6 +251,10 @@ class PersonalizedContentGenerator:
         learning_state: Optional[Dict[str, Any]] = None,
         performance_history: Optional[str] = None,
         additional_context: str = "",
+        subtopic: Optional[str] = None,
+        learning_cycle: Optional[int] = None,
+        remediation_focus: Optional[str] = None,
+        subtopic_state: Optional[Dict[str, Any]] = None,
     ) -> TeachingResponse:
         """High-level helper returning validated TeachingResponse object directly."""
         gen_res = self.generate_for_student(
@@ -215,12 +263,20 @@ class PersonalizedContentGenerator:
             learning_state=learning_state,
             performance_history=performance_history,
             additional_context=additional_context,
+            subtopic=subtopic,
+            learning_cycle=learning_cycle,
+            remediation_focus=remediation_focus,
+            subtopic_state=subtopic_state,
         )
         p_context = PersonalizationEngine.derive_context(
             student_profile=student_profile,
             topic=topic,
             learning_state=learning_state,
             performance_history=performance_history,
+            subtopic=subtopic,
+            learning_cycle=learning_cycle,
+            remediation_focus=remediation_focus,
+            subtopic_state=subtopic_state,
         )
         return ResponseParser.parse_teaching_content(
             raw_text=gen_res.content,
@@ -228,6 +284,7 @@ class PersonalizedContentGenerator:
             diagram_type=p_context.strategy.diagram_type if p_context.strategy else "concept_flowchart",
             personalization_summary=p_context.personalization_summary,
             mastery_tier=p_context.mastery_tier,
+            subtopic=p_context.subtopic,
         )
 
     def generate_tutor_response(

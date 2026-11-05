@@ -49,6 +49,8 @@ def extract_c_code(text: str) -> Optional[str]:
 def normalize_topic_name(topic: str) -> str:
     """Normalize topic string to standard PPS curriculum sequence names."""
     t = (topic or "").strip().lower()
+    if "quick" in t or "sort" in t:
+        return "Quick Sort"
     if "dynamic" in t or "dma" in t or "malloc" in t or "heap" in t:
         return "Dynamic Memory Allocation"
     if "string" in t:
@@ -1389,8 +1391,14 @@ TOPIC_GROUNDED_DEFAULTS: Dict[str, Dict[str, Dict[str, Any]]] = {
 }
 
 
-def _get_defaults_for_topic(topic: str, mastery_tier: str = "Beginner") -> Dict[str, Any]:
-    """Retrieve grounded topic defaults adapted to student mastery tier."""
+def _get_defaults_for_topic(
+    topic: str,
+    mastery_tier: str = "Beginner",
+    subtopic: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Retrieve grounded topic defaults adapted to student mastery tier and specific subtopic."""
+    from eduadapt.curriculum.pps_curriculum import get_subtopic_by_id
+
     norm_topic = normalize_topic_name(topic)
     tier = (mastery_tier or "Beginner").strip().capitalize()
     if tier not in ("Beginner", "Intermediate", "Advanced"):
@@ -1400,6 +1408,19 @@ def _get_defaults_for_topic(topic: str, mastery_tier: str = "Beginner") -> Dict[
     tier_data = topic_dict.get(tier, topic_dict.get("Beginner", TOPIC_GROUNDED_DEFAULTS["Pointers"]["Beginner"]))
 
     result = dict(tier_data)
+
+    # Subtopic-grounded adaptation
+    if subtopic:
+        sub_node = get_subtopic_by_id(norm_topic, subtopic)
+        if sub_node:
+            result["objective"] = sub_node.learning_objective or result["objective"]
+            if tier == "Beginner" and sub_node.beginner_guidance:
+                result["explanation"] = f"{sub_node.beginner_guidance}\n\n{result['explanation']}"
+            elif tier == "Intermediate" and sub_node.intermediate_guidance:
+                result["explanation"] = f"{sub_node.intermediate_guidance}\n\n{result['explanation']}"
+            elif tier == "Advanced" and sub_node.advanced_guidance:
+                result["explanation"] = f"{sub_node.advanced_guidance}\n\n{result['explanation']}"
+
     if "check" in result:
         chk = dict(result["check"])
         if "correct_answer" not in chk and "correct_option" in chk:
@@ -1482,12 +1503,13 @@ class ResponseParser:
         diagram_type: str = "concept_flowchart",
         personalization_summary: Optional[Dict[str, str]] = None,
         mastery_tier: str = "Beginner",
+        subtopic: Optional[str] = None,
     ) -> TeachingResponse:
         """Parse raw LLM output into a standardized, fully structured TeachingResponse."""
         summary = personalization_summary or {}
         tier = summary.get("mastery_tier") or mastery_tier or "Beginner"
         norm_topic = normalize_topic_name(topic)
-        defaults = _get_defaults_for_topic(norm_topic, tier)
+        defaults = _get_defaults_for_topic(norm_topic, tier, subtopic=subtopic)
 
         if not raw_text or not raw_text.strip():
             default_diag = {
@@ -1847,7 +1869,8 @@ class ResponseParser:
         title_match = re.search(r"###?\s*Title:?\s*([^\n]+)", text, re.IGNORECASE)
         if not title_match:
             title_match = re.search(r"(?:###?|Challenge:?|Exercise\s*2:?)\s*([^\n#]+)", text, re.IGNORECASE)
-        title = title_match.group(1).strip().strip("*`") if title_match else f"{norm_topic}: Adaptive C Coding Challenge"
+        topic_defaults = _get_challenge_defaults(norm_topic)
+        title = title_match.group(1).strip().strip("*`") if title_match else topic_defaults.get("title", f"{norm_topic}: Adaptive C Coding Challenge")
 
         # 2. Extract C code blocks
         code_blocks = re.findall(r"```(?:c|C)?\s*\n([\s\S]*?)```", text)
@@ -1952,19 +1975,32 @@ class ResponseParser:
         if hint_matches:
             hints = [h.strip().strip("*`") for h in hint_matches if h.strip()]
 
-        fallback_hints = [
-            f"Review the foundational concepts of {norm_topic} in C and examine how memory/variables are structured.",
-            f"Identify the key operations needed for {norm_topic} and map out your variable declarations and pointers.",
-            f"Trace the logic step-by-step to handle boundary conditions and verify the data flow.",
-            f"Write the implementation using the provided starter function signature and verify return/output values.",
-        ]
         topic_hints = topic_defaults.get("hints", [])
         for h in topic_hints:
             if h and h not in hints and len(hints) < 4:
                 hints.append(h)
-        for h in fallback_hints:
-            if len(hints) < 4 and h not in hints:
-                hints.append(h)
+
+        # 8. Pseudocode Extraction & Quality Check
+        # Extract explicit Pseudocode / Implementation Direction section if provided by LLM
+        pseudo_match = re.search(
+            r"(?:###?\s*(?:Pseudocode|Implementation Direction|Algorithm):?|\*\*Pseudocode\*\*:?)\s*([\s\S]*?)(?=###|\Z)",
+            text,
+            re.IGNORECASE,
+        )
+        extracted_pseudocode = pseudo_match.group(1).strip() if pseudo_match else ""
+        canonical_pseudocode = topic_defaults.get("pseudocode", "")
+
+        from eduadapt.teaching.question_validator import FORBIDDEN_GENERIC_PSEUDOCODE_PHRASES
+        # If Hint 4 is empty, too short, or contains forbidden generic filler, replace with canonical pseudocode
+        if len(hints) >= 4:
+            clean_h4 = hints[3].lower()
+            is_filler = any(phrase in clean_h4 for phrase in FORBIDDEN_GENERIC_PSEUDOCODE_PHRASES) or len(clean_h4) < 30
+            if is_filler and canonical_pseudocode:
+                hints[3] = canonical_pseudocode
+        elif len(hints) == 3 and canonical_pseudocode:
+            hints.append(canonical_pseudocode)
+
+        pseudocode_val = extracted_pseudocode or (hints[3] if len(hints) > 3 else canonical_pseudocode)
 
         learning_objective = topic_defaults.get(
             "learning_objective",
@@ -1975,8 +2011,21 @@ class ResponseParser:
             [{"input": sample_input, "expected_output": expected_output}]
         )
         hidden_test_cases = topic_defaults.get("hidden_test_cases", [])
+        ref_match = re.search(
+            r"###?\s*(?:Reference Solution|Solution|Complete Code):?\s*```(?:c|C)?\s*\n([\s\S]*?)```",
+            text,
+            re.IGNORECASE,
+        )
+        if ref_match:
+            reference_solution = ref_match.group(1).strip()
+        elif title != topic_defaults.get("title") and text:
+            reference_solution = starter_code
+        else:
+            reference_solution = topic_defaults.get("reference_solution", starter_code)
 
-        return {
+        challenge_dict = {
+            "question_id": topic_defaults.get("question_id", f"q_{norm_topic.lower()[:3]}_v1"),
+            "version": topic_defaults.get("version", "1.0.0"),
             "title": title,
             "topic": norm_topic,
             "difficulty": difficulty,
@@ -1987,489 +2036,33 @@ class ResponseParser:
             "input_format": input_format,
             "output_format": output_format,
             "constraints": constraints,
+            "algorithmic_approach": topic_defaults.get("algorithmic_approach", ""),
+            "pseudocode": pseudocode_val,
+            "question_type": topic_defaults.get("question_type", "FULL_PROGRAM"),
+            "function_signature": topic_defaults.get("function_signature"),
+            "starter_code": starter_code,
+            "reference_solution": reference_solution,
             "sample_input": sample_input,
             "sample_output": sample_output,
-            "sample_explanation": sample_explanation,
-            "starter_code": starter_code,
             "expected_output": expected_output,
+            "sample_explanation": sample_explanation,
             "expected_test_cases": expected_test_cases,
             "hidden_test_cases": hidden_test_cases,
             "hints": hints[:4],
             "hint_1": hints[0] if len(hints) > 0 else "",
             "hint_2": hints[1] if len(hints) > 1 else "",
             "hint_3": hints[2] if len(hints) > 2 else "",
-            "hint_4": hints[3] if len(hints) > 3 else "",
+            "hint_4": hints[3] if len(hints) > 3 else pseudocode_val,
         }
+
+        # 9. Universal Validation and Bounded Repair Pipeline
+        from eduadapt.teaching.question_validator import QuestionValidator
+        validator = QuestionValidator()
+        return validator.validate_and_repair(challenge_dict, norm_topic)
 
 
 def _get_challenge_defaults(topic: str) -> Dict[str, Any]:
     """Provide verified, runnable coding challenge specifications for each PPS topic."""
-    norm = normalize_topic_name(topic)
+    from eduadapt.teaching.canonical_question_registry import get_canonical_question
+    return get_canonical_question(topic).to_challenge_dict()
 
-    if norm == "Dynamic Memory Allocation":
-        return {
-            "title": "Dynamic Integer Array Allocation and Deallocation",
-            "topic": norm,
-            "difficulty": "Intermediate",
-            "learning_objective": "Allocate memory dynamically on the heap using malloc(), verify pointers, and free allocated memory in C.",
-            "problem_statement": (
-                "Write a C program that dynamically allocates memory on the heap for an array of integers using `malloc()`.\n"
-                "The program must first read an integer `size` indicating the number of elements.\n"
-                "Next, read `size` integers into the dynamically allocated array.\n"
-                "Print the elements separated by a space followed by a newline.\n"
-                "Finally, release the allocated memory using `free()`."
-            ),
-            "input_format": "An integer `size` followed by `size` space-separated integers on standard input.",
-            "output_format": "The array elements separated by a single space.",
-            "constraints": "1 <= size <= 1000; valid C99; NULL check guard; free memory before return.",
-            "sample_input": "5\n10 20 30 40 50",
-            "sample_output": "10 20 30 40 50",
-            "expected_output": "10 20 30 40 50",
-            "sample_explanation": "Memory for 5 integers is allocated on the heap, filled with the 5 numbers, printed, and freed.",
-            "expected_test_cases": [
-                {"input": "5\n10 20 30 40 50", "expected_output": "10 20 30 40 50"},
-            ],
-            "hidden_test_cases": [
-                {"input": "3\n1 2 3", "expected_output": "1 2 3"},
-                {"input": "1\n99", "expected_output": "99"},
-            ],
-            "starter_code": (
-                "#include <stdio.h>\n"
-                "#include <stdlib.h>\n\n"
-                "void createArray(int *array, int size);\n"
-                "void printArray(int *array, int size);\n\n"
-                "int main(void) {\n"
-                "    int size;\n"
-                "    if (scanf(\"%d\", &size) != 1 || size <= 0) {\n"
-                "        return 0;\n"
-                "    }\n\n"
-                "    int *array = (int *)malloc(size * sizeof(int));\n"
-                "    if (array == NULL) {\n"
-                "        return 1;\n"
-                "    }\n\n"
-                "    createArray(array, size);\n"
-                "    printArray(array, size);\n\n"
-                "    free(array);\n"
-                "    return 0;\n"
-                "}\n\n"
-                "void createArray(int *array, int size) {\n"
-                "    for (int i = 0; i < size; i++) {\n"
-                "        scanf(\"%d\", &array[i]);\n"
-                "    }\n"
-                "}\n\n"
-                "void printArray(int *array, int size) {\n"
-                "    for (int i = 0; i < size; i++) {\n"
-                "        printf(\"%d%s\", array[i], (i == size - 1) ? \"\" : \" \");\n"
-                "    }\n"
-                "    printf(\"\\n\");\n"
-                "}"
-            ),
-            "hints": [
-                "Use `malloc(size * sizeof(int))` to request contiguous memory on the heap.",
-                "Always check `if (array == NULL)` before accessing the allocated memory.",
-                "Read the integers into `array[i]` using standard subscript or pointer arithmetic.",
-                "Do not forget to call `free(array)` at the end to avoid memory leaks.",
-            ],
-        }
-
-    elif norm == "Pointers":
-        return {
-            "title": "In-Place Value Swapping Using Pointers",
-            "topic": norm,
-            "difficulty": "Beginner",
-            "learning_objective": "Pass addresses to functions using the address-of operator (&) and dereference pointers (*) to modify caller variables.",
-            "problem_statement": (
-                "Write a C program that swaps the values of two integers using pointers and a helper function `swap(int *a, int *b)`.\n"
-                "Read two integers from standard input, swap their values using their memory addresses, and print the swapped values."
-            ),
-            "input_format": "Two space-separated integers on standard input.",
-            "output_format": "The two integers swapped, separated by a space.",
-            "constraints": "Standard C99; mutation must occur through pointer dereferencing.",
-            "sample_input": "15 27",
-            "sample_output": "27 15",
-            "expected_output": "27 15",
-            "sample_explanation": "The addresses of 15 and 27 are passed to swap(), exchanging their values in-place.",
-            "expected_test_cases": [
-                {"input": "15 27", "expected_output": "27 15"},
-            ],
-            "hidden_test_cases": [
-                {"input": "100 200", "expected_output": "200 100"},
-                {"input": "0 5", "expected_output": "5 0"},
-            ],
-            "starter_code": (
-                "#include <stdio.h>\n\n"
-                "void swap(int *a, int *b) {\n"
-                "    int temp = *a;\n"
-                "    *a = *b;\n"
-                "    *b = temp;\n"
-                "}\n\n"
-                "int main(void) {\n"
-                "    int x, y;\n"
-                "    if (scanf(\"%d %d\", &x, &y) == 2) {\n"
-                "        swap(&x, &y);\n"
-                "        printf(\"%d %d\\n\", x, y);\n"
-                "    }\n"
-                "    return 0;\n"
-                "}"
-            ),
-            "hints": [
-                "Pass the memory addresses of x and y using the `&` operator: `swap(&x, &y)`.",
-                "In the swap function, dereference the pointers using `*a` and `*b`.",
-                "Use an intermediate temporary variable `int temp = *a;` to hold the value during exchange.",
-                "Print the final values separated by a space.",
-            ],
-        }
-
-    elif norm == "Strings":
-        return {
-            "title": "String Reversal In-Place",
-            "topic": norm,
-            "difficulty": "Beginner",
-            "learning_objective": "Manipulate null-terminated character sequences, compute lengths, and reverse strings without memory corruption.",
-            "problem_statement": (
-                "Write a C program that reads a string (up to 100 characters) and prints it reversed.\n"
-                "You must respect the terminating null character `'\\0'`."
-            ),
-            "input_format": "A single-word string on standard input.",
-            "output_format": "The reversed string printed to standard output.",
-            "constraints": "Max length 100 characters; proper null termination.",
-            "sample_input": "hello",
-            "sample_output": "olleh",
-            "expected_output": "olleh",
-            "sample_explanation": "The characters of 'hello' are printed from index 4 down to 0.",
-            "expected_test_cases": [
-                {"input": "hello", "expected_output": "olleh"},
-            ],
-            "hidden_test_cases": [
-                {"input": "cprogramming", "expected_output": "gnimmargorpc"},
-                {"input": "radar", "expected_output": "radar"},
-            ],
-            "starter_code": (
-                "#include <stdio.h>\n"
-                "#include <string.h>\n\n"
-                "int main(void) {\n"
-                "    char str[128];\n"
-                "    if (scanf(\"%127s\", str) == 1) {\n"
-                "        int len = strlen(str);\n"
-                "        for (int i = len - 1; i >= 0; i--) {\n"
-                "            putchar(str[i]);\n"
-                "        }\n"
-                "        putchar('\\n');\n"
-                "    }\n"
-                "    return 0;\n"
-                "}"
-            ),
-            "hints": [
-                "Find the length of the string using `strlen(str)`.",
-                "Start iterating backwards from `len - 1` down to `0`.",
-                "Print each character using `putchar()` or `printf(\"%c\", str[i])`.",
-                "Print a trailing newline `\\n` after the reversed string.",
-            ],
-        }
-
-    elif norm == "Arrays":
-        return {
-            "title": "Find Maximum Element in Array",
-            "topic": norm,
-            "difficulty": "Beginner",
-            "learning_objective": "Traverse indexed integer collections and maintain running extrema.",
-            "problem_statement": (
-                "Write a C program that reads an integer `N`, followed by `N` integers into an array.\n"
-                "Find and print the maximum integer element in the array."
-            ),
-            "input_format": "An integer N, followed by N space-separated integers.",
-            "output_format": "The maximum integer in the array.",
-            "constraints": "1 <= N <= 100; standard C99.",
-            "sample_input": "5\n12 45 7 89 23",
-            "sample_output": "89",
-            "expected_output": "89",
-            "sample_explanation": "Among the 5 integers {12, 45, 7, 89, 23}, 89 is the largest.",
-            "expected_test_cases": [
-                {"input": "5\n12 45 7 89 23", "expected_output": "89"},
-            ],
-            "hidden_test_cases": [
-                {"input": "4\n-10 -5 -20 -1", "expected_output": "-1"},
-                {"input": "3\n100 100 100", "expected_output": "100"},
-            ],
-            "starter_code": (
-                "#include <stdio.h>\n\n"
-                "int main(void) {\n"
-                "    int n;\n"
-                "    if (scanf(\"%d\", &n) != 1 || n <= 0) return 0;\n"
-                "    int arr[128];\n"
-                "    for (int i = 0; i < n; i++) scanf(\"%d\", &arr[i]);\n\n"
-                "    int maxVal = arr[0];\n"
-                "    for (int i = 1; i < n; i++) {\n"
-                "        if (arr[i] > maxVal) maxVal = arr[i];\n"
-                "    }\n"
-                "    printf(\"%d\\n\", maxVal);\n"
-                "    return 0;\n"
-                "}"
-            ),
-            "hints": [
-                "Initialize `maxVal = arr[0]` with the first element of the array.",
-                "Loop from index 1 to N - 1.",
-                "Whenever `arr[i] > maxVal`, update `maxVal = arr[i]`.",
-                "Print the final `maxVal` followed by a newline.",
-            ],
-        }
-
-    elif norm == "Functions":
-        return {
-            "title": "Recursive Factorial Calculation",
-            "topic": norm,
-            "difficulty": "Beginner",
-            "learning_objective": "Construct recursive functions with explicit base criteria and call-stack unwinding in C.",
-            "problem_statement": (
-                "Write a C program that computes the factorial of an integer `N` using a recursive function `factorial(int n)`.\n"
-                "Read N from standard input and print `N!`."
-            ),
-            "input_format": "A single non-negative integer N (0 <= N <= 12).",
-            "output_format": "The factorial of N.",
-            "constraints": "Use a recursive function; 0 <= N <= 12.",
-            "sample_input": "5",
-            "sample_output": "120",
-            "expected_output": "120",
-            "sample_explanation": "5! = 5 * 4 * 3 * 2 * 1 = 120.",
-            "expected_test_cases": [
-                {"input": "5", "expected_output": "120"},
-            ],
-            "hidden_test_cases": [
-                {"input": "0", "expected_output": "1"},
-                {"input": "6", "expected_output": "720"},
-            ],
-            "starter_code": (
-                "#include <stdio.h>\n\n"
-                "long long factorial(int n) {\n"
-                "    if (n <= 1) return 1;\n"
-                "    return n * factorial(n - 1);\n"
-                "}\n\n"
-                "int main(void) {\n"
-                "    int n;\n"
-                "    if (scanf(\"%d\", &n) == 1 && n >= 0) {\n"
-                "        printf(\"%lld\\n\", factorial(n));\n"
-                "    }\n"
-                "    return 0;\n"
-                "}"
-            ),
-            "hints": [
-                "Define base case: if `n <= 1`, return `1`.",
-                "In recursive step, return `n * factorial(n - 1)`.",
-                "Use `long long` for return type to handle larger factorial values.",
-                "Read input with `scanf(\"%d\", &n)` and print `factorial(n)` formatted as `%lld\\n`.",
-            ],
-        }
-
-    elif norm == "Loops":
-        return {
-            "title": "Sum of First N Natural Numbers",
-            "topic": norm,
-            "difficulty": "Beginner",
-            "learning_objective": "Utilize iteration structures (for/while loops) to aggregate sequential numeric data.",
-            "problem_statement": (
-                "Write a C program that reads an integer `N` and computes the sum of the first N natural numbers (1 to N) using a loop."
-            ),
-            "input_format": "A single positive integer N.",
-            "output_format": "The total sum.",
-            "constraints": "1 <= N <= 1000.",
-            "sample_input": "5",
-            "sample_output": "15",
-            "expected_output": "15",
-            "sample_explanation": "1 + 2 + 3 + 4 + 5 = 15.",
-            "expected_test_cases": [
-                {"input": "5", "expected_output": "15"},
-            ],
-            "hidden_test_cases": [
-                {"input": "10", "expected_output": "55"},
-                {"input": "1", "expected_output": "1"},
-            ],
-            "starter_code": (
-                "#include <stdio.h>\n\n"
-                "int main(void) {\n"
-                "    int n;\n"
-                "    if (scanf(\"%d\", &n) != 1 || n <= 0) return 0;\n"
-                "    int sum = 0;\n"
-                "    for (int i = 1; i <= n; i++) {\n"
-                "        sum += i;\n"
-                "    }\n"
-                "    printf(\"%d\\n\", sum);\n"
-                "    return 0;\n"
-                "}"
-            ),
-            "hints": [
-                "Initialize `int sum = 0;` before entering the loop.",
-                "Iterate from `i = 1` up to and including `n`.",
-                "Add `i` to `sum` in each iteration: `sum += i;`.",
-                "Print the final `sum` followed by a newline: `printf(\"%d\\n\", sum);`.",
-            ],
-        }
-
-    elif norm == "Conditionals":
-        return {
-            "title": "Number Sign Classifier",
-            "topic": norm,
-            "difficulty": "Beginner",
-            "learning_objective": "Control program execution flow using branching logic (if / else if / else).",
-            "problem_statement": (
-                "Write a C program that reads an integer and prints 'Positive', 'Negative', or 'Zero' depending on its value."
-            ),
-            "input_format": "A single integer on standard input.",
-            "output_format": "'Positive', 'Negative', or 'Zero'.",
-            "constraints": "Standard C99 if-else construct.",
-            "sample_input": "-7",
-            "sample_output": "Negative",
-            "expected_output": "Negative",
-            "sample_explanation": "-7 is less than zero, so 'Negative' is printed.",
-            "expected_test_cases": [
-                {"input": "-7", "expected_output": "Negative"},
-            ],
-            "hidden_test_cases": [
-                {"input": "42", "expected_output": "Positive"},
-                {"input": "0", "expected_output": "Zero"},
-            ],
-            "starter_code": (
-                "#include <stdio.h>\n\n"
-                "int main(void) {\n"
-                "    int num;\n"
-                "    if (scanf(\"%d\", &num) == 1) {\n"
-                "        if (num > 0) printf(\"Positive\\n\");\n"
-                "        else if (num < 0) printf(\"Negative\\n\");\n"
-                "        else printf(\"Zero\\n\");\n"
-                "    }\n"
-                "    return 0;\n"
-                "}"
-            ),
-            "hints": [
-                "Use `if (num > 0)` for positive numbers.",
-                "Use `else if (num < 0)` for negative numbers.",
-                "Use `else` for zero.",
-                "Ensure every branch prints a trailing newline `\\n`.",
-            ],
-        }
-
-    elif norm == "Structures":
-        return {
-            "title": "Student Record Formatter Using Struct",
-            "topic": norm,
-            "difficulty": "Beginner",
-            "learning_objective": "Define heterogeneous user types with struct and access fields with the dot member operator.",
-            "problem_statement": (
-                "Define a structure `struct Student` with fields `int id` and `int marks`.\n"
-                "Read `id` and `marks` from standard input, store them in a structure variable, and print them formatted as `ID: <id>, Marks: <marks>`."
-            ),
-            "input_format": "Two space-separated integers: id and marks.",
-            "output_format": "Formatted string: ID: <id>, Marks: <marks>",
-            "constraints": "Standard C99 struct definition.",
-            "sample_input": "101 95",
-            "sample_output": "ID: 101, Marks: 95",
-            "expected_output": "ID: 101, Marks: 95",
-            "sample_explanation": "Structure members are populated with 101 and 95 and printed.",
-            "expected_test_cases": [
-                {"input": "101 95", "expected_output": "ID: 101, Marks: 95"},
-            ],
-            "hidden_test_cases": [
-                {"input": "202 88", "expected_output": "ID: 202, Marks: 88"},
-                {"input": "5 100", "expected_output": "ID: 5, Marks: 100"},
-            ],
-            "starter_code": (
-                "#include <stdio.h>\n\n"
-                "struct Student {\n"
-                "    int id;\n"
-                "    int marks;\n"
-                "};\n\n"
-                "int main(void) {\n"
-                "    struct Student s;\n"
-                "    if (scanf(\"%d %d\", &s.id, &s.marks) == 2) {\n"
-                "        printf(\"ID: %d, Marks: %d\\n\", s.id, s.marks);\n"
-                "    }\n"
-                "    return 0;\n"
-                "}"
-            ),
-            "hints": [
-                "Declare `struct Student { int id; int marks; };` before `main()`.",
-                "Instantiate the struct variable: `struct Student s;`.",
-                "Access structure fields using the dot operator: `s.id` and `s.marks`.",
-                "Print the exact formatted output: `ID: %d, Marks: %d\\n`.",
-            ],
-        }
-
-    elif norm == "Operators and Expressions":
-        return {
-            "title": "Arithmetic Precedence Evaluator",
-            "topic": norm,
-            "difficulty": "Beginner",
-            "learning_objective": "Apply arithmetic operator precedence and grouping parentheses to evaluate numeric expressions.",
-            "problem_statement": (
-                "Write a C program that reads three integers `a`, `b`, and `c` and evaluates the expression `(a + b) * c`.\n"
-                "Print the integer result."
-            ),
-            "input_format": "Three space-separated integers.",
-            "output_format": "The integer result of (a + b) * c.",
-            "constraints": "Standard operator evaluation.",
-            "sample_input": "3 4 5",
-            "sample_output": "35",
-            "expected_output": "35",
-            "sample_explanation": "(3 + 4) * 5 = 7 * 5 = 35.",
-            "expected_test_cases": [
-                {"input": "3 4 5", "expected_output": "35"},
-            ],
-            "hidden_test_cases": [
-                {"input": "2 3 4", "expected_output": "20"},
-                {"input": "0 10 2", "expected_output": "20"},
-            ],
-            "starter_code": (
-                "#include <stdio.h>\n\n"
-                "int main(void) {\n"
-                "    int a, b, c;\n"
-                "    if (scanf(\"%d %d %d\", &a, &b, &c) == 3) {\n"
-                "        int result = (a + b) * c;\n"
-                "        printf(\"%d\\n\", result);\n"
-                "    }\n"
-                "    return 0;\n"
-                "}"
-            ),
-            "hints": [
-                "Understand operator precedence: multiplication naturally binds tighter than addition in C.",
-                "Use parentheses `(a + b)` so addition evaluates before multiplication.",
-                "Multiply by `c`: `(a + b) * c`.",
-                "Print the integer output followed by a newline: `printf(\"%d\\n\", result);`.",
-            ],
-        }
-
-    else:  # Variables and Data Types
-        return {
-            "title": "C Primitive Data Type Footprints",
-            "topic": norm,
-            "difficulty": "Beginner",
-            "learning_objective": "Inspect memory byte allocations of primitive C data types with the sizeof operator.",
-            "problem_statement": (
-                "Write a C program that prints the byte size of standard C datatypes: `char`, `int`, and `float`.\n"
-                "Output must be formatted as: `char: 1, int: 4, float: 4`."
-            ),
-            "input_format": "No standard input required.",
-            "output_format": "char: 1, int: 4, float: 4",
-            "constraints": "Standard sizeof operator usage.",
-            "sample_input": "",
-            "sample_output": "char: 1, int: 4, float: 4",
-            "expected_output": "char: 1, int: 4, float: 4",
-            "sample_explanation": "sizeof operator evaluates byte footprints of char, int, and float.",
-            "expected_test_cases": [
-                {"input": "", "expected_output": "char: 1, int: 4, float: 4"},
-            ],
-            "hidden_test_cases": [
-                {"input": "", "expected_output": "char: 1, int: 4, float: 4"},
-            ],
-            "starter_code": (
-                "#include <stdio.h>\n\n"
-                "int main(void) {\n"
-                "    printf(\"char: %zu, int: %zu, float: %zu\\n\", sizeof(char), sizeof(int), sizeof(float));\n"
-                "    return 0;\n"
-                "}"
-            ),
-            "hints": [
-                "Use `sizeof(type)` operator to query byte sizes of primitive types.",
-                "Inspect `char`, `int`, and `float`.",
-                "Format using `%zu` specifier for `size_t` return types in C99.",
-                "Print the exact formatted output: `char: %zu, int: %zu, float: %zu\\n`.",
-            ],
-        }

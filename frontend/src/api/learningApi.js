@@ -16,17 +16,29 @@ export async function fetchStudentsList() {
   return await res.json();
 }
 
-export async function generateLearningSession(studentId = 'S001', topic = 'Pointers', topK = 3, provider = 'ollama', model = 'mistral:7b') {
+export async function generateLearningSession(
+  studentId = 'S001',
+  topic = 'Pointers',
+  topK = 3,
+  provider = 'ollama',
+  model = 'mistral:7b',
+  subtopic = null,
+  learningCycle = null
+) {
+  const payload = {
+    student_id: studentId,
+    topic: topic,
+    top_k: Number(topK),
+    provider: provider,
+    model: model,
+  };
+  if (subtopic) payload.subtopic = subtopic;
+  if (learningCycle) payload.learning_cycle = Number(learningCycle);
+
   const res = await fetch(`${API_BASE_URL}/api/session/generate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      student_id: studentId,
-      topic: topic,
-      top_k: Number(topK),
-      provider: provider,
-      model: model,
-    }),
+    body: JSON.stringify(payload),
   });
   if (!res.ok) {
     let detail = `HTTP ${res.status}`;
@@ -207,7 +219,7 @@ export async function generatePracticeProblems(studentId = 'S001', topic = 'Poin
   return await res.json();
 }
 
-export async function executePracticeCode(studentId = 'S001', topic = 'Pointers', sourceCode = '', expectedOutput = null, isSubmission = false, stdinInput = null, timeoutSeconds = 30.0) {
+export async function executePracticeCode(studentId = 'S001', topic = 'Pointers', sourceCode = '', expectedOutput = null, isSubmission = false, stdinInput = null, timeoutSeconds = 30.0, testCases = null) {
   const res = await fetch(`${API_BASE_URL}/api/practice/execute`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -217,6 +229,7 @@ export async function executePracticeCode(studentId = 'S001', topic = 'Pointers'
       source_code: sourceCode,
       expected_output: expectedOutput,
       stdin_input: stdinInput,
+      test_cases: testCases,
       timeout_seconds: Number(timeoutSeconds),
       is_submission: isSubmission,
     }),
@@ -311,6 +324,136 @@ export async function transcribeAudioFile(file) {
   const res = await fetch(`${API_BASE_URL}/api/audio/transcribe`, {
     method: 'POST',
     body: formData,
+  });
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`;
+    try {
+      const j = await res.json();
+      if (j.detail) detail = j.detail;
+    } catch {}
+    throw new Error(detail);
+  }
+  return await res.json();
+}
+
+export async function fetchCurriculumTree() {
+  const res = await fetch(`${API_BASE_URL}/api/curriculum/tree`);
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+  }
+  return await res.json();
+}
+
+export async function fetchSubtopics(topic) {
+  const res = await fetch(`${API_BASE_URL}/api/curriculum/subtopics/${encodeURIComponent(topic)}`);
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+  }
+  return await res.json();
+}
+
+export async function fetchSubtopicProgress(studentId, topic) {
+  const res = await fetch(`${API_BASE_URL}/api/subtopics/progress/${encodeURIComponent(studentId)}/${encodeURIComponent(topic)}`);
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+  }
+  return await res.json();
+}
+
+export async function fetchSubtopicRoadmap(studentId, topic) {
+  const res = await fetch(`${API_BASE_URL}/api/subtopics/roadmap/${encodeURIComponent(studentId)}/${encodeURIComponent(topic)}`);
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+  }
+  return await res.json();
+}
+
+export async function markSubtopicReadingComplete(studentId, topic, subtopicId) {
+  const res = await fetch(`${API_BASE_URL}/api/subtopics/reading/complete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      student_id: studentId,
+      topic: topic,
+      subtopic_id: subtopicId,
+    }),
+  });
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`;
+    try {
+      const j = await res.json();
+      if (j.detail) detail = j.detail;
+    } catch {}
+    throw new Error(detail);
+  }
+  return await res.json();
+}
+
+export async function submitSubtopicMasteryCheck(
+  studentId,
+  topic,
+  subtopicId,
+  selectedOption,
+  timeTakenSeconds = 25,
+  customQuestion = null,
+  isRemedial = false
+) {
+  const res = await fetch(`${API_BASE_URL}/api/subtopics/mastery-check/submit`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      student_id: studentId,
+      topic: topic,
+      subtopic_id: subtopicId,
+      selected_option: selectedOption,
+      time_taken_seconds: timeTakenSeconds,
+      custom_question: customQuestion,
+      is_remedial: isRemedial,
+    }),
+  });
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`;
+    try {
+      const j = await res.json();
+      if (j.detail) detail = j.detail;
+    } catch {}
+    throw new Error(detail);
+  }
+  return await res.json();
+}
+
+export async function resetSubtopicProgress(studentId, topic) {
+  const res = await fetch(`${API_BASE_URL}/api/subtopics/reset`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      student_id: studentId,
+      topic: topic,
+    }),
+  });
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`;
+    try {
+      const j = await res.json();
+      if (j.detail) detail = j.detail;
+    } catch {}
+    throw new Error(detail);
+  }
+  return await res.json();
+}
+
+export async function advanceSubtopicCycle(studentId, topic, subtopicId, score = 85.0, isCorrect = true, weakConcepts = []) {
+  const res = await fetch(`${API_BASE_URL}/api/subtopics/cycle/advance`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      student_id: studentId,
+      topic: topic,
+      subtopic_id: subtopicId,
+      score: Number(score),
+      is_correct: Boolean(isCorrect),
+      weak_concepts: weakConcepts,
+    }),
   });
   if (!res.ok) {
     let detail = `HTTP ${res.status}`;

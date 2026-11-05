@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Sidebar from './components/layout/Sidebar';
 import Home from './pages/Home';
 import Learn from './pages/Learn';
@@ -16,6 +16,14 @@ export default function App() {
   const [activePage, setActivePage] = useState('home');
   const [studentId, setStudentId] = useState('S001');
   const [currentTopic, setCurrentTopic] = useState('Pointers');
+
+  // Authoritative topic and generation request tracking refs
+  const activeRequestIdRef = useRef(0);
+  const activeTopicRef = useRef(currentTopic);
+
+  useEffect(() => {
+    activeTopicRef.current = currentTopic;
+  }, [currentTopic]);
 
   const [studentProfile, setStudentProfile] = useState({
     student_id: 'S001',
@@ -64,12 +72,40 @@ export default function App() {
     setActivePage('home');
   };
 
-  // 2. Fetch lesson session
-  const handleGenerateLesson = async (topicToUse = currentTopic, sId = studentId) => {
+  // 2. Authoritative Topic Switch: Cancels in-flight requests and clears previous topic context
+  const handleTopicSwitch = (newTopic) => {
+    if (!newTopic) return;
+    activeRequestIdRef.current += 1; // Immediately invalidate all in-flight responses
+    setCurrentTopic(newTopic);
+    activeTopicRef.current = newTopic;
+    setSessionResult(null);
+    handleGenerateLesson(newTopic, studentId, null, null);
+  };
+
+  // 3. Fetch lesson session with strict topic-integrity validation
+  const handleGenerateLesson = async (
+    topicToUse = currentTopic,
+    sId = studentId,
+    subtopicToUse = null,
+    cycleToUse = null
+  ) => {
+    const thisRequestId = ++activeRequestIdRef.current;
+    activeTopicRef.current = topicToUse;
     setIsLoadingLesson(true);
     setGlobalError(null);
     try {
-      const data = await generateLearningSession(sId, topicToUse, 3);
+      const data = await generateLearningSession(sId, topicToUse, 3, 'ollama', 'mistral:7b', subtopicToUse, cycleToUse);
+      
+      // Guard against race conditions and stale in-flight responses
+      if (thisRequestId !== activeRequestIdRef.current) {
+        console.warn(`[EduAdapt] Discarding stale in-flight response (request ${thisRequestId} vs active ${activeRequestIdRef.current})`);
+        return;
+      }
+      if (data?.topic && data.topic !== activeTopicRef.current) {
+        console.warn(`[EduAdapt] Discarding mismatched response: received '${data.topic}' but active topic is '${activeTopicRef.current}'`);
+        return;
+      }
+
       setSessionResult(data);
       if (data.student) {
         setStudentProfile((prev) => ({
@@ -79,19 +115,23 @@ export default function App() {
       }
       if (data.learning_state) setLearningState(data.learning_state);
     } catch (err) {
+      if (thisRequestId !== activeRequestIdRef.current) return;
       const msg = err.message && err.message.includes('Mistral')
         ? err.message
         : 'EduAdapt could not connect to Mistral 7B. Please start Ollama and try again.';
       setGlobalError(msg);
     } finally {
-      setIsLoadingLesson(false);
+      if (thisRequestId === activeRequestIdRef.current) {
+        setIsLoadingLesson(false);
+      }
     }
   };
 
-  // Auto-generate lesson on first navigation to learn if not already generated
+  // Auto-generate lesson on navigation to learn if missing or mismatched
   const handleNavigate = (pageId) => {
     setActivePage(pageId);
-    if (pageId === 'learn' && !sessionResult && !isLoadingLesson) {
+    const sessionMatches = sessionResult?.topic === currentTopic || sessionResult?.canonical_topic_context?.topic_name === currentTopic;
+    if (pageId === 'learn' && (!sessionResult || !sessionMatches) && !isLoadingLesson) {
       handleGenerateLesson(currentTopic, studentId);
     }
   };
@@ -172,14 +212,11 @@ export default function App() {
 
         {activePage === 'learn' && (
           <Learn
+            studentId={studentId}
             currentTopic={currentTopic}
-            onTopicChange={(t) => {
-              setCurrentTopic(t);
-              setSessionResult(null);
-              handleGenerateLesson(t, studentId);
-            }}
+            onTopicChange={handleTopicSwitch}
             sessionResult={sessionResult}
-            onGenerateLesson={() => handleGenerateLesson(currentTopic, studentId)}
+            onGenerateLesson={(subtopic, cycle) => handleGenerateLesson(currentTopic, studentId, subtopic, cycle)}
             isLoading={isLoadingLesson}
             onNavigate={handleNavigate}
             onOpenTutorWithCode={handleOpenTutorWithCode}
@@ -200,9 +237,7 @@ export default function App() {
           <Practice
             studentId={studentId}
             currentTopic={currentTopic}
-            onTopicChange={(t) => {
-              setCurrentTopic(t);
-            }}
+            onTopicChange={handleTopicSwitch}
             onNavigate={handleNavigate}
             onAssessmentCompleted={handleAssessmentCompleted}
             onAskTutorWithContext={handleOpenTutorWithQuestion}
@@ -222,10 +257,7 @@ export default function App() {
             testResult={testResult}
             currentTopic={currentTopic}
             onNavigate={handleNavigate}
-            onTopicChange={(t) => {
-              setCurrentTopic(t);
-              setSessionResult(null);
-            }}
+            onTopicChange={handleTopicSwitch}
           />
         )}
 
@@ -261,10 +293,7 @@ export default function App() {
         {activePage === 'curriculum' && (
           <CurriculumPage
             currentTopic={currentTopic}
-            onSelectTopic={(t) => {
-              setCurrentTopic(t);
-              setSessionResult(null);
-            }}
+            onSelectTopic={handleTopicSwitch}
             onNavigate={handleNavigate}
           />
         )}

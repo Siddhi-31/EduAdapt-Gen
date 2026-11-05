@@ -4,14 +4,27 @@ Provides deterministic, student-adaptive instructional strategies derived from
 REAL StudentProfile and Learning Twin states. Strictly non-agentic.
 """
 
+import logging
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 from eduadapt.interfaces.student_model import StudentProfile
-
-
-# Documented mastery thresholds
-MASTERY_THRESHOLD_BEGINNER_MAX = 0.40
-MASTERY_THRESHOLD_INTERMEDIATE_MAX = 0.70
+from eduadapt.curriculum.mastery_policy import (
+    MASTERY_THRESHOLD_BEGINNER_MAX,
+    MASTERY_THRESHOLD_DEVELOPING_MAX,
+    MASTERY_THRESHOLD_INTERMEDIATE_MAX,
+    MASTERY_THRESHOLD_ADVANCED_MAX,
+    MASTERY_THRESHOLD_MASTERED,
+    evaluate_mastery_tier,
+    evaluate_detailed_diagnostic_level,
+    get_max_cycles_for_tier,
+)
+from eduadapt.curriculum.pps_curriculum import (
+    get_subtopics_for_topic,
+    get_subtopic_by_id,
+    normalize_topic_key,
+)
 
 
 @dataclass
@@ -69,6 +82,17 @@ class PersonalizationContext:
     preferred_learning_style: str
     recommended_difficulty: str
     predicted_mastery_level: str
+    subtopic: Optional[str] = None
+    subtopic_id: Optional[str] = None
+    subtopic_mastery: Optional[float] = None
+    learning_cycle: int = 1
+    max_cycles: int = 5
+    remediation_focus: Optional[str] = None
+    previous_errors: List[str] = field(default_factory=list)
+    completed_subtopics: List[str] = field(default_factory=list)
+    pending_subtopics: List[str] = field(default_factory=list)
+    prerequisite_mastery: Optional[float] = None
+    target_mastery_threshold: float = MASTERY_THRESHOLD_MASTERED
     common_misconceptions: List[str] = field(default_factory=list)
     accuracy: Optional[float] = None
     attempt_count: Optional[float] = None
@@ -81,16 +105,24 @@ class PersonalizationContext:
         """Human-readable bullet points explaining what personalization was applied."""
         if not self.strategy:
             return ["Strategy: General PPS curriculum progression"]
+
+        effective_sub = self.subtopic or self.target_topic
+        eff_mastery = self.subtopic_mastery if self.subtopic_mastery is not None else self.topic_mastery
+
         bullets = [
-            f"Topic Mastery: {self.topic_mastery:.2f} ({self.mastery_tier} Tier)",
+            f"Topic: {self.target_topic} • Subtopic: {effective_sub}",
+            f"Subtopic Mastery: {eff_mastery:.2f} ({self.mastery_tier} Tier - {evaluate_detailed_diagnostic_level(eff_mastery)})",
+            f"Teaching Cycle: Cycle {self.learning_cycle} of {self.max_cycles} ({'Targeted Remediation' if self.learning_cycle > 1 else 'Initial Instruction'})",
             f"Learning Pace: {self.learning_pace.capitalize()} pace instruction",
-            f"Teaching Strategy: {self.strategy.teaching_approach}",
+            f"Teaching Approach: {self.strategy.teaching_approach}",
             f"Explanation Depth: {self.strategy.explanation_depth}",
             f"Code Complexity: {self.strategy.code_complexity}",
             f"Scaffolding Level: {self.strategy.scaffolding_level}",
             f"Concept Focus: {self.personalization_summary.get('concept_focus', 'Core curriculum mechanics and invariants')}",
             f"Pedagogical Rationale: {self.personalization_summary.get('rationale', '')}",
         ]
+        if self.remediation_focus:
+            bullets.append(f"Remediation Target: {self.remediation_focus}")
         return bullets
 
 
@@ -173,13 +205,18 @@ class PersonalizationEngine:
         topic: str,
         learning_state: Optional[Dict[str, Any]] = None,
         performance_history: Optional[str] = None,
+        subtopic: Optional[str] = None,
+        learning_cycle: Optional[int] = None,
+        remediation_focus: Optional[str] = None,
+        subtopic_state: Optional[Dict[str, Any]] = None,
     ) -> PersonalizationContext:
         """Derive normalized personalization context from real student profile and state.
 
         Does not invent missing data. When a field is unavailable, uses explicit neutral defaults.
-        Topic-specific mastery takes precedence over general mastery for the topic.
+        Subtopic-specific mastery takes precedence over general topic mastery.
         """
         raw_state = learning_state or {}
+        sub_raw = subtopic_state or {}
 
         # 1. Topic-specific mastery vs overall mastery
         topic_mastery: float
@@ -199,10 +236,39 @@ class PersonalizationEngine:
         else:
             overall_mastery = topic_mastery
 
+        # Subtopic resolution & subtopic-specific mastery
+        valid_nodes = get_subtopics_for_topic(normalize_topic_key(topic))
+        valid_ids = {n.id for n in valid_nodes}
+        valid_titles = {n.title.strip().lower() for n in valid_nodes}
+
+        # Sanitize any subtopic string that belongs to a different topic
+        if subtopic:
+            clean_sub = subtopic.strip().lower()
+            if subtopic not in valid_ids and clean_sub not in valid_titles:
+                logger.warning("Sanitizing mismatched subtopic '%s' for topic '%s'", subtopic, topic)
+                subtopic = sub_raw.get("title") or (valid_nodes[0].title if valid_nodes else None)
+
+        target_subtopic = subtopic or sub_raw.get("title") or sub_raw.get("id")
+        subtopic_id = sub_raw.get("id") or (valid_nodes[0].id if valid_nodes else None)
+        subtopic_mastery: float
+
+        if sub_raw and sub_raw.get("attempts", 0) > 0 and "mastery" in sub_raw and sub_raw["mastery"] is not None:
+            subtopic_mastery = float(sub_raw["mastery"])
+            effective_mastery_for_tier = subtopic_mastery
+        elif target_subtopic and target_subtopic in student_profile.mastery_levels and student_profile.mastery_levels[target_subtopic] > 0:
+            subtopic_mastery = float(student_profile.mastery_levels[target_subtopic])
+            effective_mastery_for_tier = subtopic_mastery
+        elif target_subtopic and subtopic_id and subtopic_id in student_profile.mastery_levels and student_profile.mastery_levels[subtopic_id] > 0:
+            subtopic_mastery = float(student_profile.mastery_levels[subtopic_id])
+            effective_mastery_for_tier = subtopic_mastery
+        else:
+            subtopic_mastery = float(sub_raw["mastery"]) if (sub_raw and "mastery" in sub_raw and sub_raw["mastery"] is not None) else 0.0
+            effective_mastery_for_tier = topic_mastery
+
         # 2. Strict documented mastery tier evaluation
-        if topic_mastery < MASTERY_THRESHOLD_BEGINNER_MAX:
+        if effective_mastery_for_tier < MASTERY_THRESHOLD_BEGINNER_MAX:
             mastery_tier = "Beginner"
-        elif topic_mastery < MASTERY_THRESHOLD_INTERMEDIATE_MAX:
+        elif effective_mastery_for_tier < MASTERY_THRESHOLD_INTERMEDIATE_MAX:
             mastery_tier = "Intermediate"
         else:
             mastery_tier = "Advanced"
@@ -224,7 +290,7 @@ class PersonalizationEngine:
         # 4. Learning style & difficulties
         learning_style = student_profile.learning_style or "balanced"
         recommended_difficulty = str(
-            raw_state.get("recommended_difficulty") or "Medium"
+            raw_state.get("recommended_difficulty") or ("Easy" if mastery_tier == "Beginner" else ("Hard" if mastery_tier == "Advanced" else "Medium"))
         )
         predicted_mastery_level = str(
             raw_state.get("predicted_mastery_level") or mastery_tier
@@ -246,38 +312,85 @@ class PersonalizationEngine:
             else None
         )
 
-        # 5. Identify dynamic instructional pattern across student states
-        diagram_type = select_diagram_type_for_topic(topic, mastery_tier)
-        diagram_directive = build_diagram_directive(diagram_type, topic, mastery_tier)
+        # 5. Adaptive Cycle Tracking
+        max_cycles = get_max_cycles_for_tier(mastery_tier)
+        cycle_num = int(learning_cycle or sub_raw.get("learning_cycle") or 1)
+        cycle_num = max(1, min(max_cycles, cycle_num))
+
+        # Identified misconceptions and previous errors
+        misconceptions = list(student_profile.common_misconceptions or [])
+        if sub_raw.get("identified_misconceptions"):
+            for m in sub_raw["identified_misconceptions"]:
+                if m not in misconceptions:
+                    misconceptions.append(m)
+
+        err_cats = list(sub_raw.get("error_categories") or [])
+        rem_focus = remediation_focus or sub_raw.get("remediation_focus") or ""
+
+        # 6. Diagram Selection
+        diagram_target = target_subtopic or topic
+        diagram_type = select_diagram_type_for_topic(diagram_target, mastery_tier)
+        diagram_directive = build_diagram_directive(diagram_type, diagram_target, mastery_tier)
 
         strategy, pattern_name = PersonalizationEngine._compute_strategy(
             mastery_tier=mastery_tier,
-            topic_mastery=topic_mastery,
+            topic_mastery=effective_mastery_for_tier,
             overall_mastery=overall_mastery,
             learning_pace=normalized_pace,
             diagram_type=diagram_type,
             diagram_directive=diagram_directive,
+            learning_cycle=cycle_num,
+            remediation_focus=rem_focus,
         )
 
         # Derive pedagogical rationale and concept focus from observed profile state
-        if student_profile.common_misconceptions:
-            concept_focus = f"Identified error patterns: {'; '.join(student_profile.common_misconceptions)}"
+        subject_name = f"{topic}: {target_subtopic}" if target_subtopic and target_subtopic != topic else topic
+        if misconceptions:
+            concept_focus = f"Identified error patterns: {'; '.join(misconceptions)}"
         else:
-            concept_focus = f"Core syllabus fundamentals and memory mechanics for {topic}"
+            concept_focus = f"Core syllabus fundamentals and memory mechanics for {subject_name}"
 
+        # Granular student-adaptive explanation
         if mastery_tier == "Beginner":
-            if normalized_pace == "slow":
-                rationale = "Student is establishing fundamentals at a measured pace (<0.40 mastery); instruction teaches from core memory primitives, uses intuitive real-world analogies, provides small (<15 lines) C code, and granular line-by-line tracing."
+            if overall_mastery >= MASTERY_THRESHOLD_INTERMEDIATE_MAX:
+                rationale = (
+                    f"Student has strong overall programming knowledge ({overall_mastery:.2f}), "
+                    f"but is developing in {subject_name} ({subtopic_mastery:.2f}). Instruction bridges known C concepts "
+                    f"to this specific mechanism with guided diagnostics (Cycle {cycle_num} of {max_cycles})."
+                )
+            elif normalized_pace == "slow":
+                rationale = (
+                    f"Student is establishing fundamentals at a measured pace ({subtopic_mastery:.2f} mastery); "
+                    f"Cycle {cycle_num} of {max_cycles} teaches from core memory primitives, uses intuitive real-world analogies, "
+                    f"provides small (<15 lines) C code, and granular line-by-line tracing."
+                )
             else:
-                rationale = "Student has introductory topic mastery (<0.40); instruction focuses directly on core syntactic rules, memory representations, and targeted diagnostic checks to resolve prerequisite gaps quickly."
+                rationale = (
+                    f"Student has introductory mastery ({subtopic_mastery:.2f}); "
+                    f"Cycle {cycle_num} of {max_cycles} focuses directly on core syntactic rules, memory representations, "
+                    f"and targeted diagnostic checks to resolve prerequisite gaps quickly."
+                )
         elif mastery_tier == "Intermediate":
-            rationale = "Student has established basic understanding (0.40-0.70 mastery); instruction recaps essential rules and advances to practical multi-statement C programs, array/function connections, and execution flow tracing."
+            rationale = (
+                f"Student has established basic understanding ({subtopic_mastery:.2f} mastery); "
+                f"Cycle {cycle_num} of {max_cycles} recaps essential rules and advances to practical multi-statement C programs, "
+                f"execution flow tracing, and output prediction."
+            )
         else:
-            rationale = "Student demonstrates strong mastery (>=0.70); instruction skips introductory programming lectures to focus on advanced C semantics, edge cases, pointer indirection, and robust modular design."
+            rationale = (
+                f"Student demonstrates strong mastery ({subtopic_mastery:.2f}); "
+                f"Cycle {cycle_num} of {max_cycles} skips introductory definitions to focus on advanced C semantics, "
+                f"edge cases, pointer indirection, and robust modular design."
+            )
+
+        if rem_focus:
+            rationale += f" Remediation objective: {rem_focus}."
 
         summary = {
             "mastery_tier": mastery_tier,
             "topic_mastery": f"{topic_mastery:.2f}",
+            "subtopic_mastery": f"{subtopic_mastery:.2f}",
+            "learning_cycle": f"Cycle {cycle_num} of {max_cycles}",
             "learning_pace": normalized_pace,
             "pattern": pattern_name,
             "instructional_strategy": strategy.teaching_approach,
@@ -288,6 +401,7 @@ class PersonalizationEngine:
             "diagram": diagram_type,
             "concept_focus": concept_focus,
             "rationale": rationale,
+            "remediation_focus": rem_focus,
         }
 
         return PersonalizationContext(
@@ -300,7 +414,14 @@ class PersonalizationEngine:
             preferred_learning_style=learning_style,
             recommended_difficulty=recommended_difficulty,
             predicted_mastery_level=predicted_mastery_level,
-            common_misconceptions=list(student_profile.common_misconceptions or []),
+            subtopic=target_subtopic,
+            subtopic_id=subtopic_id,
+            subtopic_mastery=round(subtopic_mastery, 3),
+            learning_cycle=cycle_num,
+            max_cycles=max_cycles,
+            remediation_focus=rem_focus,
+            previous_errors=err_cats,
+            common_misconceptions=misconceptions,
             accuracy=accuracy_val,
             attempt_count=attempts_val,
             average_time_seconds=time_val,
@@ -317,7 +438,210 @@ class PersonalizationEngine:
         learning_pace: str,
         diagram_type: str,
         diagram_directive: str,
+        learning_cycle: int = 1,
+        remediation_focus: str = "",
     ) -> tuple[InstructionalStrategy, str]:
+        """Compute the 15 pedagogical dimensions deterministically."""
+
+        # Pattern E: Strong overall performance (>= 0.60) but topic-specific weakness (< 0.40)
+        if overall_mastery >= 0.60 and topic_mastery < MASTERY_THRESHOLD_BEGINNER_MAX:
+            pattern_name = f"Strong overall foundation with topic-specific gap (Cycle {learning_cycle})"
+            strategy = InstructionalStrategy(
+                explanation_depth="targeted foundational (bridge from familiar C programming concepts)",
+                teaching_approach="analogical bridge connecting known C concepts to this new topic",
+                cognitive_difficulty="introductory to this specific topic, respecting existing programming maturity",
+                code_complexity="clean minimal syntax highlighting the new mechanism without trivializing",
+                example_selection="focused PPS examples isolating the specific difficult mechanism",
+                step_granularity="granular steps for the new topic mechanism while assuming standard syntax familiarity",
+                scaffolding_level="guided scaffolding focused strictly on the gap concept",
+                practice_complexity="scaffolded diagnostic practice transitioning quickly to standard application",
+                diagram_type=diagram_type,
+                diagram_recommendation=diagram_directive,
+                feedback_style="supportive, recognizing prior programming capability while clarifying this topic",
+                misconception_strategy="explicit comparison showing how this topic differs from already-mastered concepts",
+                roadmap_sequencing="targeted prerequisite bridge followed by rapid integration with advanced curriculum",
+                response_structure="structured: Bridge from Known Concepts -> Mechanics -> Code -> Edge Cases",
+                amount_of_explanation="moderate and focused, avoiding redundant basic programming lectures",
+                revision_strategy="targeted verification checks on the newly introduced concept",
+            )
+            return strategy, pattern_name
+
+        # Beginner Fast Pace (Pattern B)
+        if mastery_tier == "Beginner" and learning_pace == "fast" and learning_cycle == 1:
+            pattern_name = "Low mastery / fast pace (Efficient gap resolution)"
+            strategy = InstructionalStrategy(
+                explanation_depth="foundational but concise, zeroing in directly on the core conceptual mechanics",
+                teaching_approach="direct mechanism explanation with concise remedial examples to address gaps fast",
+                cognitive_difficulty="introductory to core concepts without slow pacing or verbose narrative",
+                code_complexity="concise C examples demonstrating correct syntax and immediate execution flow",
+                example_selection="direct, practical PPS code examples targeting the specific difficulty",
+                step_granularity="moderate-sized logical steps highlighting cause and effect directly",
+                scaffolding_level="focused scaffolding, providing quick diagnostic checks rather than long hand-holding",
+                practice_complexity="quick-fire conceptual checks and targeted code-reading problems",
+                diagram_type=diagram_type,
+                diagram_recommendation=diagram_directive,
+                feedback_style="direct, actionable, explaining exactly why an error occurred and how to fix it",
+                misconception_strategy="rapid contrast tables showing correct vs incorrect code patterns",
+                roadmap_sequencing="compressed remedial path focusing on core hurdles to accelerate progression",
+                response_structure="compact: Core Rule -> Direct Code Demonstration -> Pitfall Contrast -> Rapid Check",
+                amount_of_explanation="concise, high signal-to-noise ratio, avoiding repetitive storytelling",
+                revision_strategy="rapid conceptual checkpoints verifying root understanding before moving ahead",
+            )
+            return strategy, pattern_name
+
+        # Adaptive Cycle specific strategies for Weak Learners (< 0.40)
+        if mastery_tier == "Beginner":
+            if learning_cycle == 1:
+                pattern_name = f"Low mastery / {learning_pace} pace (Deep foundational support)"
+                strategy = InstructionalStrategy(
+                    explanation_depth="foundational first-principles: explain what variables are, RAM cells, and byte memory addresses using concrete analogies before introducing syntax",
+                    teaching_approach="step-by-step concrete breakdown, introducing one concept at a time",
+                    cognitive_difficulty="introductory, low cognitive load, zero ambiguous jargon, avoiding multiple difficult concepts simultaneously",
+                    code_complexity="simple, short C snippets (<15 lines) with comprehensive line-by-line comments",
+                    example_selection="everyday intuitive analogies followed by simple C code demonstration",
+                    step_granularity="small, highly granular sequential steps with intermediate trace values and expected output explanation",
+                    scaffolding_level="high scaffolding, explicit walkthroughs, and guided hints before full solutions",
+                    practice_complexity="introductory single-concept exercises with starting templates and hint ladders",
+                    diagram_type=diagram_type,
+                    diagram_recommendation=diagram_directive,
+                    feedback_style="supportive, encouraging, breaking down errors into gentle corrective hints",
+                    misconception_strategy="proactive clarification of common beginner pitfalls before student encounters them",
+                    roadmap_sequencing="sequential foundational milestones with ample reinforcement checkpoints",
+                    response_structure="delineated: Concept Analogy -> Syntax Breakdown -> Annotated Code -> Walkthrough -> Guided Practice",
+                    amount_of_explanation="thorough and detailed, leaving no implicit assumptions unexplained",
+                    revision_strategy="frequent conceptual check-ins and repetitive reinforcement of core primitives",
+                )
+                return strategy, pattern_name
+            elif learning_cycle == 2:
+                pattern_name = f"Weak Learner Cycle 2: Concept Reinforcement & Memory Layout ({learning_pace} pace)"
+                strategy = InstructionalStrategy(
+                    explanation_depth="reinforced foundational: simpler alternative explanation with heavy visual memory layout and address-value contrast",
+                    teaching_approach="visual reinforcement and line-by-line execution walkthrough",
+                    cognitive_difficulty="foundational with active recall checks, zero advanced edge cases",
+                    code_complexity="minimal C snippets (<12 lines) isolating the single core operator or statement",
+                    example_selection="visual memory representation paired with concrete C variable tracing",
+                    step_granularity="fine-grained tracing showing memory state at every line",
+                    scaffolding_level="maximum scaffolding with guided templates and annotated answers",
+                    practice_complexity="beginner fill-in-the-blank and guided trace exercises",
+                    diagram_type=diagram_type,
+                    diagram_recommendation=diagram_directive,
+                    feedback_style="gentle, empathetic coaching explaining why output matches memory state",
+                    misconception_strategy="direct comparison table of address vs value",
+                    roadmap_sequencing="reinforce prerequisite foundation before allowing new concepts",
+                    response_structure="reinforced: Memory Visual -> Line-by-Line Code Trace -> Guided Check",
+                    amount_of_explanation="clear and visual, emphasizing mental models of RAM",
+                    revision_strategy="immediate check on address vs dereference understanding",
+                )
+                return strategy, pattern_name
+            elif learning_cycle == 3:
+                pattern_name = f"Weak Learner Cycle 3: Targeted Misconception Remediation ({learning_pace} pace)"
+                target_focus = remediation_focus or "observed student error patterns"
+                strategy = InstructionalStrategy(
+                    explanation_depth=f"targeted remediation focusing specifically on {target_focus}",
+                    teaching_approach="error-contrast method: showing the student's exact error pattern alongside the corrected solution",
+                    cognitive_difficulty="remedial to intermediate bridge, isolating the confusion point",
+                    code_complexity="compact C code specifically highlighting the corrected mistake",
+                    example_selection=f"targeted remediation examples addressing {target_focus}",
+                    step_granularity="high-precision step tracing around the error trigger line",
+                    scaffolding_level="targeted scaffolding focused on the specific misconception",
+                    practice_complexity="focused practice problems isolating the misunderstood mechanism",
+                    diagram_type=diagram_type,
+                    diagram_recommendation=diagram_directive,
+                    feedback_style="constructive diagnostic feedback showing why the previous attempt failed",
+                    misconception_strategy=f"focused remediation targeting {target_focus}",
+                    roadmap_sequencing="misconception resolution milestone before proceeding",
+                    response_structure="targeted: Misconception Clarification -> Corrected Pattern -> Practice Challenge",
+                    amount_of_explanation="high signal focused strictly on resolving the misconception",
+                    revision_strategy="re-testing the specific weak concept",
+                )
+                return strategy, pattern_name
+            elif learning_cycle == 4:
+                pattern_name = f"Weak Learner Cycle 4: Guided Code Exercises & Alternative Pathways ({learning_pace} pace)"
+                strategy = InstructionalStrategy(
+                    explanation_depth="alternative pedagogical perspective using different metaphors and guided practice steps",
+                    teaching_approach="scaffolded guided coding with step-by-step hint ladders",
+                    cognitive_difficulty="foundational to developing, building confidence through guided exercises",
+                    code_complexity="clean standard C code with progressive fill-in tasks",
+                    example_selection="practical beginner laboratory exercises with clear starter templates",
+                    step_granularity="semi-granular with student deduction prompts",
+                    scaffolding_level="fading scaffolding: starting with full hints and progressing to partial hints",
+                    practice_complexity="paired guided coding exercises with progressive hint ladders",
+                    diagram_type=diagram_type,
+                    diagram_recommendation=diagram_directive,
+                    feedback_style="encouraging, highlighting progress while correcting remaining inaccuracies",
+                    misconception_strategy="proactive sanity checks before code compilation",
+                    roadmap_sequencing="stabilize competency before final subtopic mastery check",
+                    response_structure="guided: Alternative Explanation -> Scaffolded Code -> Hint Ladder Practice",
+                    amount_of_explanation="balanced, emphasizing learning by guided doing",
+                    revision_strategy="synthesis check across the subtopic",
+                )
+                return strategy, pattern_name
+            else:  # Cycle 5
+                pattern_name = f"Weak Learner Cycle 5: Final Mastery Validation & Honest Diagnosis ({learning_pace} pace)"
+                strategy = InstructionalStrategy(
+                    explanation_depth="comprehensive subtopic summary highlighting must-know invariants and syntax rules",
+                    teaching_approach="diagnostic mastery evaluation: assess whether student is ready to progress or requires external revision",
+                    cognitive_difficulty="standard subtopic threshold level to validate genuine mastery",
+                    code_complexity="standard representative PPS code snippet",
+                    example_selection="capstone subtopic problem testing complete conceptual loop",
+                    step_granularity="standard logical explanation steps",
+                    scaffolding_level="unassisted assessment with fallback remediation summary",
+                    practice_complexity="evaluative multiple-choice and code output prediction checks",
+                    diagram_type=diagram_type,
+                    diagram_recommendation=diagram_directive,
+                    feedback_style="honest, transparent progress assessment without false mastery claims",
+                    misconception_strategy="final summary of remaining concepts requiring revision",
+                    roadmap_sequencing="either advance to next subtopic if score >= 0.70 or mark incomplete with recommendations",
+                    response_structure="evaluative: Concept Summary -> Final Check -> Honest Roadmap Recommendation",
+                    amount_of_explanation="concise summary and actionable next-steps guidance",
+                    revision_strategy="final mastery validation gate",
+                )
+                return strategy, pattern_name
+
+        # Intermediate Learners (0.40 - 0.70)
+        if mastery_tier == "Intermediate":
+            pattern_name = f"Intermediate Learner Cycle {learning_cycle}: Concept Expansion & Practical Applications"
+            strategy = InstructionalStrategy(
+                explanation_depth="mechanistic: recap prerequisites concisely, then explore practical multi-statement C programs, memory layout, and execution tracing",
+                teaching_approach="guided code walkthroughs connecting related PPS concepts, output tracing, and debugging exercises",
+                cognitive_difficulty="moderate, combining multiple syntax elements into coherent programming patterns",
+                code_complexity="moderately complex C programs (15-30 lines) with structured functions and logic",
+                example_selection="standard PPS laboratory and textbook problems showing realistic usage and common mistakes",
+                step_granularity="moderate steps highlighting control flow transitions and state transformations",
+                scaffolding_level="partially guided, gradually fading scaffolding as explanation progresses",
+                practice_complexity="moderate application problems, code-tracing exercises, and bug-hunting tasks",
+                diagram_type=diagram_type,
+                diagram_recommendation=diagram_directive,
+                feedback_style="analytical and constructive, guiding the student to identify their own logic gaps",
+                misconception_strategy="highlighting subtle edge cases and explaining common runtime misunderstandings",
+                roadmap_sequencing="balanced progression connecting core fundamentals to intermediate PPS topics",
+                response_structure="structured: Internal Mechanics -> PPS Code Example -> Execution Trace -> Practice Challenge",
+                amount_of_explanation="balanced, combining clear conceptual rationale with technical code trace",
+                revision_strategy="progressive challenge problems testing both syntax and execution reasoning",
+            )
+            return strategy, pattern_name
+
+        # Advanced / Strong Learners (>= 0.70)
+        pattern_name = f"Advanced Learner Cycle {learning_cycle}: Challenge-Driven & In-Depth Semantics"
+        strategy = InstructionalStrategy(
+            explanation_depth="deep technical depth: memory architecture, execution reasoning, complex pointer operations, edge cases, and compiler behavior without elementary definition filler",
+            teaching_approach="analytical, first-principles exploration of C semantics, complex code reasoning, and debugging",
+            cognitive_difficulty="advanced, including boundary conditions, memory addresses, efficiency, and edge cases",
+            code_complexity="idiomatic, robust C code demonstrating pointer indirection, edge cases, modularity, and clean design",
+            example_selection="challenging PPS application problems, multi-function implementations, and tricky valid C constructs",
+            step_granularity="high-level concise architectural steps, omitting elementary syntax explanations",
+            scaffolding_level="minimal scaffolding, promoting autonomous problem solving and rigorous reasoning",
+            practice_complexity="challenging application scenarios, edge-case debugging, and algorithmic reasoning",
+            diagram_type=diagram_type,
+            diagram_recommendation=diagram_directive,
+            feedback_style="concise, rigorous, and technical, focusing on optimization, safety, and edge-case coverage",
+            misconception_strategy="in-depth analysis of undefined behavior, memory corruption, and subtle semantic pitfalls",
+            roadmap_sequencing="accelerated roadmap emphasizing advanced PPS applications and system-level concepts",
+            response_structure="technical: Concept Architecture -> Memory / System Behavior -> Idiomatic C Implementation -> Advanced Challenge",
+            amount_of_explanation="dense and technical, avoiding elementary introductions or redundant analogies",
+            revision_strategy="complex multi-step challenge problems requiring independent synthesis",
+        )
+        return strategy, pattern_name
         """Compute the 15 pedagogical dimensions deterministically."""
 
         # Pattern E: Strong overall performance (>= 0.70) but topic-specific weakness (< 0.40)

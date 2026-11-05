@@ -27,9 +27,13 @@ You teach C programming using curriculum-grounded, student-adaptive instructiona
 
 === STUDENT PROFILE & LEARNING CONTEXT ===
 - Student ID: {student_id}
-- Current Topic: {topic}
-- Topic Mastery Score: {topic_mastery} (Tier: {mastery_tier})
-- Overall Mastery Score: {overall_mastery}
+- Parent Topic: {topic}
+- Current Subtopic: {subtopic}
+- Subtopic Mastery Score: {subtopic_mastery} (Tier: {mastery_tier})
+- Topic Mastery Score: {topic_mastery}
+- Overall Course Mastery: {overall_mastery}
+- Learning Cycle: Cycle {learning_cycle} of {max_cycles}
+- Remediation Target: {remediation_focus}
 - Predicted Mastery Level: {predicted_mastery_level}
 - Learning Pace: {learning_pace}
 - Preferred Learning Style: {learning_style}
@@ -37,7 +41,11 @@ You teach C programming using curriculum-grounded, student-adaptive instructiona
 - Identified Common Misconceptions: {misconceptions}
 - Assessment Performance Signal: {performance_signal}
 
+=== MANDATORY PEDAGOGICAL METHODOLOGY DIRECTIVE ({mastery_tier} TIER) ===
+{tier_instruction}
+
 NOTE TO TUTOR: Use these signals to change the instructional strategy, not merely to mention the student's profile in the response.
+A response that merely labels a lesson "Beginner", "Intermediate", or "Advanced" while presenting essentially identical content is a personalization failure. Change what is taught, how deeply it is taught, example complexity, and code difficulty.
 
 === TARGET LEARNING OBJECTIVE ===
 {learning_objective}
@@ -153,18 +161,18 @@ Generate the coding challenge using the following clear markdown structure:
 ### Title: <Descriptive Problem Title>
 ### Problem Statement:
 <Clear, unambiguous problem description grounded in PPS C programming, tailored to {mastery_tier} difficulty.>
-- **Input Format**: <Description of input format>
-- **Output Format**: <Description of expected output format>
-- **Constraints**: <Constraints, e.g. pointer/array constraints>
-- **Sample Input**: <Sample input value>
-- **Sample Output**: <Expected sample output value>
-- **Explanation**: <Explanation of how input transforms to output>
+- **Input Format**: <Description of exact stdin format>
+- **Output Format**: <Description of expected stdout format>
+- **Constraints**: <Constraints, e.g. ranges, memory bounds>
+- **Sample Input**: <Sample input value on stdin>
+- **Sample Output**: <Exact stdout produced by executing the solution on Sample Input>
+- **Explanation**: <Pedagogical explanation describing how Sample Input transforms into Sample Output for this exact problem; do not reference unrelated problems>
 
 ### Starter Code:
 ```c
 #include <stdio.h>
 
-// Starter code with function signature and main() driver for testing
+// Complete, valid starter code with function signature and main() driver for testing
 ```
 
 ### Expected Output:
@@ -174,7 +182,7 @@ Generate the coding challenge using the following clear markdown structure:
 - **Hint 1 (Conceptual Guidance)**: <High-level conceptual guidance without revealing solution code>
 - **Hint 2 (Approach)**: <More specific strategy and logic approach>
 - **Hint 3 (Algorithmic Guidance)**: <Step-by-step logic or data flow breakdown>
-- **Hint 4 (Implementation / Pseudocode)**: <Pseudocode or syntax direction>
+- **Hint 4 (Implementation / Pseudocode)**: <Detailed, multi-step algorithmic pseudocode (Algorithm name, inputs, initialization, loops/conditions, intermediate steps, termination, output). DO NOT provide generic one-liners like 'Print the final values'.>
 """
 
 

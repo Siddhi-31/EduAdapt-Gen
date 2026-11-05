@@ -54,7 +54,7 @@ htmlcov/
 
 # Logs & Models
 *.log
-models/
+/models/
 checkpoints/
 weights/
 *.pt

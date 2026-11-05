@@ -25,6 +25,7 @@ Strictly non-agentic: no autonomous agent loops or multi-agent frameworks.
 from dataclasses import asdict, dataclass
 import logging
 from pathlib import Path
+import time
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
@@ -43,6 +44,18 @@ from eduadapt.rag.rag_interface import PPSCurriculumRAG
 from eduadapt.roadmap.planner import RoadmapGenerator
 from eduadapt.teaching.generator import PersonalizedContentGenerator
 from eduadapt.verification.response_verifier import ResponseVerifier
+from eduadapt.curriculum.mastery_policy import (
+    evaluate_mastery_tier,
+)
+from eduadapt.curriculum.pps_curriculum import (
+    get_subtopics_for_topic,
+    normalize_topic_key,
+)
+from eduadapt.models.topic_context import (
+    CanonicalTopicContext,
+    get_curriculum_unit_for_topic,
+)
+from eduadapt.services.subtopic_progress_service import SubtopicProgressService
 from member3.assessment import calculate_student_performance
 from member3.features import create_features
 from member3.learning_twin import create_learning_twin
@@ -686,6 +699,7 @@ class AdaptiveLearningService:
             llm_client=self.llm_client,
             prompt_manager=self.prompt_manager,
         )
+        self.subtopic_service = SubtopicProgressService()
 
     def run_learning_session(
         self,
@@ -696,6 +710,8 @@ class AdaptiveLearningService:
         generate_feedback: bool = True,
         generate_teaching: bool = True,
         assessment_submission: Optional[Dict[str, Any]] = None,
+        subtopic: Optional[str] = None,
+        learning_cycle: Optional[int] = None,
     ) -> Dict[str, Any]:
         """Run an end-to-end adaptive learning session.
 
@@ -787,20 +803,106 @@ class AdaptiveLearningService:
             "retrieved_chunks": retrieved_chunks,
         }
 
+        # 2.5 SUBTOPIC PROGRESS & ADAPTIVE CYCLES (Strict Topic Context Validation)
+        valid_subtopics = get_subtopics_for_topic(normalize_topic_key(topic))
+        valid_subtopic_ids = {s.id for s in valid_subtopics}
+        valid_subtopic_titles = {s.title.strip().lower() for s in valid_subtopics}
+        subtopic_matches = True
+        validation_notes: List[str] = []
+
+        if subtopic:
+            clean_sub = subtopic.strip().lower()
+            if subtopic not in valid_subtopic_ids and clean_sub not in valid_subtopic_titles:
+                subtopic_matches = False
+                validation_notes.append(
+                    f"Requested subtopic '{subtopic}' does not belong to topic '{topic}'. "
+                    f"Automatically sanitized to active subtopic of '{topic}' to maintain topic integrity."
+                )
+                logger.warning(
+                    "Topic mismatch: Subtopic '%s' does not belong to topic '%s'. Sanitizing.",
+                    subtopic,
+                    topic,
+                )
+                subtopic = None
+
+        subtopic_progress = self.subtopic_service.get_topic_progress(
+            student_id=student_id,
+            topic=topic,
+            overall_mastery=student_section.get("mastery", 0.0),
+            learning_pace=student_section.get("learning_pace", "moderate"),
+        )
+        active_subtopic_state = self.subtopic_service.get_subtopic_state(
+            student_id=student_id,
+            topic=topic,
+            subtopic_id_or_title=subtopic,
+            overall_mastery=student_section.get("mastery", 0.0),
+            learning_pace=student_section.get("learning_pace", "moderate"),
+        )
+        target_subtopic_title = active_subtopic_state.get("title") or active_subtopic_state.get("id") or (valid_subtopics[0].title if valid_subtopics else topic)
+        target_sub_id = active_subtopic_state.get("id") or (valid_subtopics[0].id if valid_subtopics else "")
+
+        # Security check: Reject generating lesson for a strictly locked subtopic
+        if active_subtopic_state.get("status") == "LOCKED" and subtopic:
+            raise ValueError(
+                f"Subtopic '{target_subtopic_title}' is locked. "
+                "Complete the prerequisite subtopic and pass its mastery check before unlocking this lesson."
+            )
+
+        # Transition UNLOCKED to IN_PROGRESS upon opening lesson
+        if target_sub_id and active_subtopic_state.get("status") == "UNLOCKED":
+            try:
+                self.subtopic_service.set_subtopic_in_progress(student_id, topic, target_sub_id)
+                active_subtopic_state["status"] = "IN_PROGRESS"
+            except Exception as e:
+                logger.warning("Could not set subtopic in progress: %s", e)
+
+        target_cycle = int(learning_cycle or active_subtopic_state.get("learning_cycle") or 1)
+
+        # Build Authoritative Canonical Topic Context
+        session_id = f"sess_{student_id}_{normalize_topic_key(topic)}_{int(time.time() * 1000)}"
+        canonical_context = CanonicalTopicContext(
+            student_id=student_id,
+            topic_id=normalize_topic_key(topic),
+            topic_name=topic,
+            subtopic_id=target_sub_id,
+            subtopic_name=target_subtopic_title,
+            curriculum_unit_id=get_curriculum_unit_for_topic(topic),
+            learning_session_id=session_id,
+            learning_cycle=target_cycle,
+            student_mastery=float(student_section.get("mastery", 0.0)),
+            student_pace=str(student_section.get("learning_pace", "moderate")),
+            personalization_tier=evaluate_mastery_tier(student_section.get("mastery", 0.0)),
+            is_valid_topic=True,
+            subtopic_matches_topic=subtopic_matches,
+            validation_notes=validation_notes,
+        )
+
         # 3. PERSONALIZED TEACHING GENERATION (Member 1 Content Generator)
         if generate_teaching:
             gen_result = self.teaching_generator.generate_for_student(
                 topic=topic,
                 student_profile=profile,
                 learning_state=raw_state,
+                subtopic=target_subtopic_title,
+                learning_cycle=target_cycle,
+                remediation_focus=active_subtopic_state.get("remediation_focus"),
+                subtopic_state=active_subtopic_state,
             )
             content_text = gen_result.content
             gen_meta = gen_result.metadata or {}
 
             teaching_section = {
+                "topic": topic,
+                "canonical_topic_context": canonical_context.to_dict(),
                 "generated_teaching_content": content_text,
                 "provider": self.llm_client.__class__.__name__,
                 "model": gen_result.model_name,
+                "subtopic": target_subtopic_title,
+                "subtopic_id": active_subtopic_state.get("id"),
+                "subtopic_mastery": active_subtopic_state.get("mastery", 0.0),
+                "learning_cycle": target_cycle,
+                "max_cycles": active_subtopic_state.get("max_cycles", 5),
+                "remediation_focus": active_subtopic_state.get("remediation_focus", ""),
                 "latency": gen_meta.get("latency_seconds"),
                 "token_information": {
                     "prompt_tokens": gen_result.prompt_tokens,
@@ -818,8 +920,12 @@ class AdaptiveLearningService:
                 "generation_metadata": {
                     "student_id": gen_meta.get("student_id", student_id),
                     "topic": topic,
+                    "subtopic": target_subtopic_title,
                     "actual_mastery_used": gen_meta.get("actual_mastery_used"),
+                    "subtopic_mastery": gen_meta.get("subtopic_mastery"),
                     "mastery_tier": gen_meta.get("mastery_tier"),
+                    "learning_cycle": target_cycle,
+                    "max_cycles": active_subtopic_state.get("max_cycles", 5),
                     "learning_pace": gen_meta.get("learning_pace"),
                     "selected_strategy": gen_meta.get("selected_strategy"),
                     "explanation_depth": gen_meta.get("explanation_depth"),
@@ -974,6 +1080,8 @@ class AdaptiveLearningService:
 
         # Build preliminary result to pass into Accessibility Formatter
         session_result = {
+            "topic": topic,
+            "canonical_topic_context": canonical_context.to_dict(),
             "student": student_section,
             "profile": profile_section,
             "curriculum": curriculum_section,
@@ -983,6 +1091,10 @@ class AdaptiveLearningService:
             "learning_state": learning_state_section,
             "roadmap": roadmap_section,
             "verification": verification_section,
+            "subtopic": target_subtopic_title,
+            "active_subtopic": active_subtopic_state,
+            "subtopics_progress": subtopic_progress,
+            "subtopic_roadmap": self.subtopic_service.get_student_subtopic_roadmap(student_id, topic),
         }
 
         # 9. ACCESSIBILITY FORMATTING (Member 4 Accessibility Formatter)
@@ -999,6 +1111,7 @@ class AdaptiveLearningService:
         time_taken_seconds: int = 25,
         question_idx: int = 0,
         question_id: Optional[str] = None,
+        subtopic_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Fast, non-blocking evaluation of student answer and Learning Twin state recomputation.
 
@@ -1027,6 +1140,26 @@ class AdaptiveLearningService:
         student_opt = selected_option.strip().upper()
         is_correct = (student_opt == correct_opt)
         score = 95 if is_correct else 35
+
+        # Record cycle attempt in subtopic progress service
+        target_sub_id = subtopic_id
+        if not target_sub_id:
+            prog = self.subtopic_service.get_topic_progress(student_id, topic)
+            target_sub_id = prog.get("active_subtopic_id")
+
+        cycle_result = None
+        if target_sub_id:
+            cycle_result = self.subtopic_service.record_cycle_attempt(
+                student_id=student_id,
+                topic=topic,
+                subtopic_id=target_sub_id,
+                score=float(score),
+                is_correct=is_correct,
+                accuracy=1.0 if is_correct else 0.0,
+                weak_concepts=[matched_q.get("concept", topic)] if not is_correct else [],
+                error_category="CONCEPTUAL" if not is_correct else None,
+                time_taken_seconds=time_taken_seconds,
+            )
 
         # Recompute Learning Twin features in-place
         updated_state = None
@@ -1105,4 +1238,7 @@ class AdaptiveLearningService:
                 ),
             },
             "updated_student": student_section,
+            "cycle_result": cycle_result,
+            "subtopic_id": target_sub_id,
+            "subtopics_progress": self.subtopic_service.get_topic_progress(student_id, topic),
         }
