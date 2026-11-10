@@ -25,5 +25,19 @@
         "timestamp": "2026-11-04T23:58:28.194981"
       }
     ]
+  },
+  "S-DC9412": {
+    "Variables and Data Types": [
+      {
+        "role": "student",
+        "text": "Explain Variables and Data Types simply with a short example.",
+        "timestamp": "2026-11-10T14:35:10.202827"
+      },
+      {
+        "role": "assistant",
+        "text": "**Curriculum Concept Summary for Variables and Data Types:**\n\n[Source 1: Unit 1 PPS.pptx, page 82 | Unit 1 | Datatypes]\n12 Datatypes\nDefines a variable before use\nSpecifies the type of data to be stored in variables\nBasic Data Types \u2013 4 Classes\nint \u2013 Signed or unsigned number\nfloat \u2013 Signed or unsigned number having Decimal Point\ndouble \u2013 Double Precision Floating point number\nchar \u2013 A Character in the character Set\n\n[Source 2: Unit 1 PPS.pptx, page 72 | Unit 1 | Syntax]\nSyntax\n\ndatatype variablename;\n\n[Source 3: UNIT 4-PPS.pptx, page 20 | Unit 4 | Basic Data Types in Python]\nData types are the classification or categorization of data items.\nIt represents the kind of value that tells what operations can be performed on a particular data.\nSince everything is an object in Python programming, data types are actually classes and variables are instance (object) of these classes.\nFollowing are the standard or built-in data type of Python:\n\n> *Note: Local Ollama model `mistral:7b` is not available. To enable live generative AI responses, run `ollama pull mistral:7b` in your terminal.*",
+        "timestamp": "2026-11-10T14:35:12.433315"
+      }
+    ]
   }
 }

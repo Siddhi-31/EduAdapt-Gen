@@ -1,7 +1,19 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
+export async function authFetch(url, options = {}) {
+  let authToken = null;
+  try {
+    authToken = localStorage.getItem('ea_token') || localStorage.getItem('eduadapt_token');
+  } catch {}
+  const headers = { ...(options.headers || {}) };
+  if (authToken && !headers['Authorization']) {
+    headers['Authorization'] = `Bearer ${authToken}`;
+  }
+  return fetch(url, { ...options, headers });
+}
+
 export async function fetchStudentProfile(studentId = 'S001') {
-  const res = await fetch(`${API_BASE_URL}/api/student/${encodeURIComponent(studentId)}`);
+  const res = await authFetch(`${API_BASE_URL}/api/student/${encodeURIComponent(studentId)}`);
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}: ${res.statusText}`);
   }
@@ -9,7 +21,7 @@ export async function fetchStudentProfile(studentId = 'S001') {
 }
 
 export async function fetchStudentsList() {
-  const res = await fetch(`${API_BASE_URL}/api/students`);
+  const res = await authFetch(`${API_BASE_URL}/api/students`);
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}: ${res.statusText}`);
   }
@@ -35,7 +47,7 @@ export async function generateLearningSession(
   if (subtopic) payload.subtopic = subtopic;
   if (learningCycle) payload.learning_cycle = Number(learningCycle);
 
-  const res = await fetch(`${API_BASE_URL}/api/session/generate`, {
+  const res = await authFetch(`${API_BASE_URL}/api/session/generate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -52,7 +64,7 @@ export async function generateLearningSession(
 }
 
 export async function askAiTutor(studentId = 'S001', topic = 'Pointers', message = '', promptVariation = null) {
-  const res = await fetch(`${API_BASE_URL}/api/tutor/chat`, {
+  const res = await authFetch(`${API_BASE_URL}/api/tutor/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -74,7 +86,7 @@ export async function askAiTutor(studentId = 'S001', topic = 'Pointers', message
 }
 
 export async function fetchTutorHistory(studentId = 'S001', topic = 'Pointers') {
-  const res = await fetch(`${API_BASE_URL}/api/tutor/history/${encodeURIComponent(studentId)}/${encodeURIComponent(topic)}`);
+  const res = await authFetch(`${API_BASE_URL}/api/tutor/history/${encodeURIComponent(studentId)}/${encodeURIComponent(topic)}`);
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}: ${res.statusText}`);
   }
@@ -82,7 +94,7 @@ export async function fetchTutorHistory(studentId = 'S001', topic = 'Pointers') 
 }
 
 export async function clearTutorHistory(studentId = 'S001', topic = 'Pointers') {
-  const res = await fetch(`${API_BASE_URL}/api/tutor/history/${encodeURIComponent(studentId)}/${encodeURIComponent(topic)}`, {
+  const res = await authFetch(`${API_BASE_URL}/api/tutor/history/${encodeURIComponent(studentId)}/${encodeURIComponent(topic)}`, {
     method: 'DELETE',
   });
   if (!res.ok) {
@@ -92,7 +104,7 @@ export async function clearTutorHistory(studentId = 'S001', topic = 'Pointers') 
 }
 
 export async function fetchTopicAssessment(studentId = 'S001', topic = 'Pointers') {
-  const res = await fetch(`${API_BASE_URL}/api/assessment/${encodeURIComponent(studentId)}/${encodeURIComponent(topic)}`);
+  const res = await authFetch(`${API_BASE_URL}/api/assessment/${encodeURIComponent(studentId)}/${encodeURIComponent(topic)}`);
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}: ${res.statusText}`);
   }
@@ -100,7 +112,7 @@ export async function fetchTopicAssessment(studentId = 'S001', topic = 'Pointers
 }
 
 export async function fetchTopicQuestions(studentId = 'S001', topic = 'Pointers') {
-  const res = await fetch(`${API_BASE_URL}/api/assessment/${encodeURIComponent(studentId)}/${encodeURIComponent(topic)}/all`);
+  const res = await authFetch(`${API_BASE_URL}/api/assessment/${encodeURIComponent(studentId)}/${encodeURIComponent(topic)}/all`);
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}: ${res.statusText}`);
   }
@@ -108,7 +120,7 @@ export async function fetchTopicQuestions(studentId = 'S001', topic = 'Pointers'
 }
 
 export async function fetchPracticeMcqs(studentId = 'S001', topic = 'Pointers') {
-  const res = await fetch(`${API_BASE_URL}/api/practice/${encodeURIComponent(studentId)}/${encodeURIComponent(topic)}/mcqs`);
+  const res = await authFetch(`${API_BASE_URL}/api/practice/${encodeURIComponent(studentId)}/${encodeURIComponent(topic)}/mcqs`);
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}: ${res.statusText}`);
   }
@@ -116,7 +128,7 @@ export async function fetchPracticeMcqs(studentId = 'S001', topic = 'Pointers') 
 }
 
 export async function submitPracticeSession(studentId = 'S001', topic = 'Pointers', answers = {}, timeTaken = 25) {
-  const res = await fetch(`${API_BASE_URL}/api/practice/submit`, {
+  const res = await authFetch(`${API_BASE_URL}/api/practice/submit`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -138,7 +150,7 @@ export async function submitPracticeSession(studentId = 'S001', topic = 'Pointer
 }
 
 export async function submitAssessmentFull(studentId = 'S001', topic = 'Pointers', answers = {}, timeTaken = 120) {
-  const res = await fetch(`${API_BASE_URL}/api/assessment/submit`, {
+  const res = await authFetch(`${API_BASE_URL}/api/assessment/submit`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -160,7 +172,7 @@ export async function submitAssessmentFull(studentId = 'S001', topic = 'Pointers
 }
 
 export async function fetchStudentRoadmap(studentId = 'S001') {
-  const res = await fetch(`${API_BASE_URL}/api/roadmap/${encodeURIComponent(studentId)}`);
+  const res = await authFetch(`${API_BASE_URL}/api/roadmap/${encodeURIComponent(studentId)}`);
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}: ${res.statusText}`);
   }
@@ -168,7 +180,7 @@ export async function fetchStudentRoadmap(studentId = 'S001') {
 }
 
 export async function advanceStudentTopic(studentId = 'S001', topic = 'Pointers') {
-  const res = await fetch(`${API_BASE_URL}/api/roadmap/${encodeURIComponent(studentId)}/advance?topic=${encodeURIComponent(topic)}`, {
+  const res = await authFetch(`${API_BASE_URL}/api/roadmap/${encodeURIComponent(studentId)}/advance?topic=${encodeURIComponent(topic)}`, {
     method: 'POST',
   });
   if (!res.ok) {
@@ -178,7 +190,7 @@ export async function advanceStudentTopic(studentId = 'S001', topic = 'Pointers'
 }
 
 export async function submitAssessmentAnswer(studentId = 'S001', topic = 'Pointers', selectedOption = 'B', timeTaken = 25) {
-  const res = await fetch(`${API_BASE_URL}/api/assessment/submit`, {
+  const res = await authFetch(`${API_BASE_URL}/api/assessment/submit`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -200,7 +212,7 @@ export async function submitAssessmentAnswer(studentId = 'S001', topic = 'Pointe
 }
 
 export async function generatePracticeProblems(studentId = 'S001', topic = 'Pointers') {
-  const res = await fetch(`${API_BASE_URL}/api/practice/generate`, {
+  const res = await authFetch(`${API_BASE_URL}/api/practice/generate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -220,7 +232,7 @@ export async function generatePracticeProblems(studentId = 'S001', topic = 'Poin
 }
 
 export async function executePracticeCode(studentId = 'S001', topic = 'Pointers', sourceCode = '', expectedOutput = null, isSubmission = false, stdinInput = null, timeoutSeconds = 30.0, testCases = null) {
-  const res = await fetch(`${API_BASE_URL}/api/practice/execute`, {
+  const res = await authFetch(`${API_BASE_URL}/api/practice/execute`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -246,7 +258,7 @@ export async function executePracticeCode(studentId = 'S001', topic = 'Pointers'
 }
 
 export async function generateAdaptiveRoadmap(studentId = 'S001', topic = 'Pointers') {
-  const res = await fetch(`${API_BASE_URL}/api/roadmap/generate`, {
+  const res = await authFetch(`${API_BASE_URL}/api/roadmap/generate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -266,7 +278,7 @@ export async function generateAdaptiveRoadmap(studentId = 'S001', topic = 'Point
 }
 
 export async function fetchCurriculumTopics() {
-  const res = await fetch(`${API_BASE_URL}/api/curriculum/topics`);
+  const res = await authFetch(`${API_BASE_URL}/api/curriculum/topics`);
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}: ${res.statusText}`);
   }
@@ -274,7 +286,7 @@ export async function fetchCurriculumTopics() {
 }
 
 export async function searchCurriculum(query, topK = 3) {
-  const res = await fetch(`${API_BASE_URL}/api/curriculum/search`, {
+  const res = await authFetch(`${API_BASE_URL}/api/curriculum/search`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -294,7 +306,7 @@ export async function searchCurriculum(query, topK = 3) {
 }
 
 export async function fetchAudioStatus() {
-  const res = await fetch(`${API_BASE_URL}/api/audio/status`);
+  const res = await authFetch(`${API_BASE_URL}/api/audio/status`);
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}: ${res.statusText}`);
   }
@@ -302,7 +314,7 @@ export async function fetchAudioStatus() {
 }
 
 export async function synthesizeLessonAudio(text, rate = 170) {
-  const res = await fetch(`${API_BASE_URL}/api/audio/synthesize`, {
+  const res = await authFetch(`${API_BASE_URL}/api/audio/synthesize`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ text, rate }),
@@ -321,7 +333,7 @@ export async function synthesizeLessonAudio(text, rate = 170) {
 export async function transcribeAudioFile(file) {
   const formData = new FormData();
   formData.append('file', file);
-  const res = await fetch(`${API_BASE_URL}/api/audio/transcribe`, {
+  const res = await authFetch(`${API_BASE_URL}/api/audio/transcribe`, {
     method: 'POST',
     body: formData,
   });
@@ -337,7 +349,7 @@ export async function transcribeAudioFile(file) {
 }
 
 export async function fetchCurriculumTree() {
-  const res = await fetch(`${API_BASE_URL}/api/curriculum/tree`);
+  const res = await authFetch(`${API_BASE_URL}/api/curriculum/tree`);
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}: ${res.statusText}`);
   }
@@ -345,7 +357,7 @@ export async function fetchCurriculumTree() {
 }
 
 export async function fetchSubtopics(topic) {
-  const res = await fetch(`${API_BASE_URL}/api/curriculum/subtopics/${encodeURIComponent(topic)}`);
+  const res = await authFetch(`${API_BASE_URL}/api/curriculum/subtopics/${encodeURIComponent(topic)}`);
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}: ${res.statusText}`);
   }
@@ -353,7 +365,7 @@ export async function fetchSubtopics(topic) {
 }
 
 export async function fetchSubtopicProgress(studentId, topic) {
-  const res = await fetch(`${API_BASE_URL}/api/subtopics/progress/${encodeURIComponent(studentId)}/${encodeURIComponent(topic)}`);
+  const res = await authFetch(`${API_BASE_URL}/api/subtopics/progress/${encodeURIComponent(studentId)}/${encodeURIComponent(topic)}`);
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}: ${res.statusText}`);
   }
@@ -361,7 +373,7 @@ export async function fetchSubtopicProgress(studentId, topic) {
 }
 
 export async function fetchSubtopicRoadmap(studentId, topic) {
-  const res = await fetch(`${API_BASE_URL}/api/subtopics/roadmap/${encodeURIComponent(studentId)}/${encodeURIComponent(topic)}`);
+  const res = await authFetch(`${API_BASE_URL}/api/subtopics/roadmap/${encodeURIComponent(studentId)}/${encodeURIComponent(topic)}`);
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}: ${res.statusText}`);
   }
@@ -369,7 +381,7 @@ export async function fetchSubtopicRoadmap(studentId, topic) {
 }
 
 export async function markSubtopicReadingComplete(studentId, topic, subtopicId) {
-  const res = await fetch(`${API_BASE_URL}/api/subtopics/reading/complete`, {
+  const res = await authFetch(`${API_BASE_URL}/api/subtopics/reading/complete`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -398,7 +410,7 @@ export async function submitSubtopicMasteryCheck(
   customQuestion = null,
   isRemedial = false
 ) {
-  const res = await fetch(`${API_BASE_URL}/api/subtopics/mastery-check/submit`, {
+  const res = await authFetch(`${API_BASE_URL}/api/subtopics/mastery-check/submit`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -423,7 +435,7 @@ export async function submitSubtopicMasteryCheck(
 }
 
 export async function resetSubtopicProgress(studentId, topic) {
-  const res = await fetch(`${API_BASE_URL}/api/subtopics/reset`, {
+  const res = await authFetch(`${API_BASE_URL}/api/subtopics/reset`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -443,7 +455,7 @@ export async function resetSubtopicProgress(studentId, topic) {
 }
 
 export async function advanceSubtopicCycle(studentId, topic, subtopicId, score = 85.0, isCorrect = true, weakConcepts = []) {
-  const res = await fetch(`${API_BASE_URL}/api/subtopics/cycle/advance`, {
+  const res = await authFetch(`${API_BASE_URL}/api/subtopics/cycle/advance`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -455,6 +467,122 @@ export async function advanceSubtopicCycle(studentId, topic, subtopicId, score =
       weak_concepts: weakConcepts,
     }),
   });
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`;
+    try {
+      const j = await res.json();
+      if (j.detail) detail = j.detail;
+    } catch {}
+    throw new Error(detail);
+  }
+  return await res.json();
+}
+
+export async function startDiagnosticAssessment() {
+  const res = await authFetch(`${API_BASE_URL}/api/diagnostic/start`);
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`;
+    try {
+      const j = await res.json();
+      if (j.detail) detail = j.detail;
+    } catch {}
+    throw new Error(detail);
+  }
+  return await res.json();
+}
+
+export async function saveDiagnosticProgress(attemptId, answers, currentIndex = 0, flaggedIds = []) {
+  const res = await authFetch(`${API_BASE_URL}/api/diagnostic/save`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      attempt_id: attemptId,
+      answers: answers,
+      current_index: currentIndex,
+      flagged_ids: flaggedIds,
+    }),
+  });
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`;
+    try {
+      const j = await res.json();
+      if (j.detail) detail = j.detail;
+    } catch {}
+    throw new Error(detail);
+  }
+  return await res.json();
+}
+
+export async function submitDiagnosticAssessment(attemptId, answers) {
+  const res = await authFetch(`${API_BASE_URL}/api/diagnostic/submit`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      attempt_id: attemptId,
+      answers: answers,
+    }),
+  });
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`;
+    try {
+      const j = await res.json();
+      if (j.detail) detail = j.detail;
+    } catch {}
+    throw new Error(detail);
+  }
+  return await res.json();
+}
+
+export async function fetchDiagnosticResults() {
+  const res = await authFetch(`${API_BASE_URL}/api/diagnostic/results`);
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`;
+    try {
+      const j = await res.json();
+      if (j.detail) detail = j.detail;
+    } catch {}
+    throw new Error(detail);
+  }
+  return await res.json();
+}
+
+export async function updateStudentProfile(profileData) {
+  const res = await authFetch(`${API_BASE_URL}/api/profile`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(profileData),
+  });
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`;
+    try {
+      const j = await res.json();
+      if (j.detail) detail = j.detail;
+    } catch {}
+    throw new Error(detail);
+  }
+  return await res.json();
+}
+
+export async function updateStudentPreferences(prefData) {
+  const res = await authFetch(`${API_BASE_URL}/api/profile/preferences`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(prefData),
+  });
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`;
+    try {
+      const j = await res.json();
+      if (j.detail) detail = j.detail;
+    } catch {}
+    throw new Error(detail);
+  }
+  return await res.json();
+}
+
+export async function fetchAuthoritativeRoadmap(studentId) {
+  const url = studentId ? `${API_BASE_URL}/api/roadmap/${encodeURIComponent(studentId)}` : `${API_BASE_URL}/api/roadmap/me`;
+  const res = await authFetch(url);
   if (!res.ok) {
     let detail = `HTTP ${res.status}`;
     try {

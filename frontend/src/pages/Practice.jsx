@@ -5,6 +5,7 @@ import {
   generatePracticeProblems,
   executePracticeCode,
 } from '../api/learningApi';
+import { Bar, Icon, Loading, Spinner, StatusPill, fmtTime } from '../components/ui';
 
 const PPS_UNITS = [
   {
@@ -39,9 +40,7 @@ export default function Practice({
 }) {
   const [activeTab, setActiveTab] = useState('mcq'); // 'mcq' | 'ai_challenge'
 
-  // ==========================================
-  // Mode 1: 5-Question Curriculum MCQs (|P| = 5)
-  // ==========================================
+  // Mode 1: 5-Question Curriculum MCQs
   const [practiceQuestions, setPracticeQuestions] = useState([]);
   const [currentQIdx, setCurrentQIdx] = useState(0);
   const [practiceAnswers, setPracticeAnswers] = useState({});
@@ -51,9 +50,7 @@ export default function Practice({
   const [isLoadingMcq, setIsLoadingMcq] = useState(true);
   const [isSubmittingMcq, setIsSubmittingMcq] = useState(false);
 
-  // ==========================================
-  // Mode 2: AI Coding Challenge with Hint Ladder
-  // ==========================================
+  // Mode 2: AI Coding Challenge & Sandbox
   const [aiProblems, setAiProblems] = useState(null);
   const [isLoadingAi, setIsLoadingAi] = useState(false);
   const [revealedHints, setRevealedHints] = useState({});
@@ -64,7 +61,7 @@ export default function Practice({
   const [customStdin, setCustomStdin] = useState('');
   const [errorMessage, setErrorMessage] = useState(null);
 
-  // Load 5-Question Curriculum Practice Session
+  // Load 5-Question MCQs
   useEffect(() => {
     let isMounted = true;
     setIsLoadingMcq(true);
@@ -94,7 +91,6 @@ export default function Practice({
     };
   }, [studentId, currentTopic]);
 
-  // Handle adaptive change when studentId or currentTopic changes
   useEffect(() => {
     if (activeTab === 'ai_challenge') {
       handleGenerateAiPractice(studentId, currentTopic);
@@ -102,7 +98,7 @@ export default function Practice({
       setAiProblems(null);
       setExecResult(null);
     }
-  }, [studentId, currentTopic]);
+  }, [studentId, currentTopic, activeTab]);
 
   const handleGenerateAiPractice = async (sid = studentId, top = currentTopic) => {
     setIsLoadingAi(true);
@@ -120,7 +116,7 @@ export default function Practice({
           setStudentCode(chal.starter_code);
         } else {
           setStudentCode(
-            `#include <stdio.h>\n\n// Complete solution for ${top}\nint main() {\n    printf("Hello EduAdapt\\n");\n    return 0;\n}`
+            `#include <stdio.h>\n\n// Complete solution for ${top}\nint main(void) {\n    printf("Hello EduAdapt\\n");\n    return 0;\n}`
           );
         }
         if (chal.sample_input) {
@@ -130,7 +126,7 @@ export default function Practice({
         }
       }
     } catch (err) {
-      setErrorMessage('Unable to generate AI challenge: ' + (err.message || 'Check backend status'));
+      setErrorMessage('Unable to load practice challenge: ' + (err.message || 'Check connection status'));
     } finally {
       setIsLoadingAi(false);
     }
@@ -256,333 +252,266 @@ export default function Practice({
   const currentChallenge = aiProblems?.challenge || (Array.isArray(aiProblems?.practice_problems) ? aiProblems.practice_problems[0] : null);
 
   return (
-    <div className="practice-page">
-      <header className="page-header">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
-          <div>
-            <h2 className="page-title">Practice: {currentTopic}</h2>
-            <p className="page-subtitle">
-              Solve adaptive conceptual checks and C coding challenges for Student <strong>{studentId}</strong>.
-            </p>
-          </div>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-            {onTopicChange && (
-              <select
-                className="form-select"
-                style={{ width: 'auto', minWidth: '180px', padding: '6px 10px', fontSize: '12px' }}
-                value={currentTopic}
-                onChange={(e) => onTopicChange(e.target.value)}
-              >
-                {PPS_UNITS.map((u) => (
-                  <optgroup key={u.unit} label={u.unit}>
-                    {u.topics.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-            )}
-            <button
-              type="button"
-              className={activeTab === 'mcq' ? 'btn-primary' : 'btn-secondary'}
-              onClick={() => setActiveTab('mcq')}
-              style={{ fontSize: '12px', padding: '6px 12px' }}
-            >
-              Curriculum MCQs (5 Questions) ✓
-            </button>
-            <button
-              type="button"
-              className={activeTab === 'ai_challenge' ? 'btn-primary' : 'btn-secondary'}
-              onClick={() => {
-                setActiveTab('ai_challenge');
-                if (!aiProblems && !isLoadingAi) handleGenerateAiPractice(studentId, currentTopic);
-              }}
-              style={{ fontSize: '12px', padding: '6px 12px' }}
-            >
-              AI Coding Challenge (Hint Ladder) +
-            </button>
-          </div>
+    <div className="page">
+      <div className="page-head">
+        <div>
+          <span className="eyebrow plain">Practice & Code</span>
+          <h1>Practice: {currentTopic}</h1>
+          <p className="muted">
+            Concept checks and interactive C coding practice for Student <strong>{studentId}</strong>.
+          </p>
         </div>
-      </header>
 
-      {errorMessage && (
-        <div className="error-box" style={{ marginBottom: '16px' }} role="alert">
-          <h4>Notice</h4>
-          <p>{errorMessage}</p>
+        <div className="row">
+          {onTopicChange && (
+            <select
+              className="input"
+              style={{ width: 'auto', minWidth: 170 }}
+              value={currentTopic}
+              onChange={(e) => onTopicChange(e.target.value)}
+            >
+              {PPS_UNITS.map((u) => (
+                <optgroup key={u.unit} label={u.unit}>
+                  {u.topics.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          )}
+
+          <div className="chip-select">
+            <button
+              type="button"
+              className={activeTab === 'mcq' ? 'on' : ''}
+              onClick={() => setActiveTab('mcq')}
+            >
+              <Icon name="check" size={14} /> Concept Checks (5)
+            </button>
+            <button
+              type="button"
+              className={activeTab === 'ai_challenge' ? 'on' : ''}
+              onClick={() => setActiveTab('ai_challenge')}
+            >
+              <Icon name="code" size={14} /> C Code Practice
+            </button>
+          </div>
         </div>
-      )}
+      </div>
+
+      {errorMessage && <p className="error-box">{errorMessage}</p>}
 
       {/* Mode 1: 5-Question Curriculum MCQs */}
       {activeTab === 'mcq' && (
         <>
-          {isLoadingMcq && (
-            <div className="card" style={{ textAlign: 'center', padding: '40px', color: 'var(--color-text-secondary)' }}>
-              Loading 5 verified practice questions for {currentTopic}...
-            </div>
-          )}
+          {isLoadingMcq && <Loading />}
 
           {!isLoadingMcq && practiceQuestions.length > 0 && !practiceSubmitted && currentQ && (
-            <div className="card">
-              {/* Question Navigation Header Bar */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span className="badge-blue">
+            <div className="grid" style={{ gridTemplateColumns: '2fr 1fr', alignItems: 'start' }}>
+              <div className="card col" style={{ gap: 16 }}>
+                <div className="row between">
+                  <span className="eyebrow">
                     Question {currentQIdx + 1} of {totalQuestions}
                   </span>
-                  <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
-                    Concept: <strong>{currentQ.concept || currentTopic}</strong> • Difficulty: <strong>{currentQ.difficulty || 'Intermediate'}</strong>
-                  </span>
+                  <div className="row">
+                    <span className="pill violet">{currentQ.concept || currentTopic}</span>
+                    <span className="pill">{currentQ.difficulty || 'Intermediate'}</span>
+                  </div>
                 </div>
-                <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
-                  Answered: <strong>{answeredCount} / {totalQuestions}</strong>
+
+                <h2 style={{ fontWeight: 500, fontSize: '1.25em', lineHeight: 1.5 }}>
+                  {currentQ.question}
+                </h2>
+
+                <div className="col" role="radiogroup">
+                  {(currentQ.options || []).map((opt, optIdx) => {
+                    const letter = opt.trim().charAt(0).toUpperCase();
+                    const isSelected = practiceAnswers[currentQIdx] === letter;
+                    const cleanLabel = opt.substring(opt.indexOf(')') + 1).trim() || opt;
+
+                    return (
+                      <button
+                        key={optIdx}
+                        type="button"
+                        role="radio"
+                        aria-checked={isSelected}
+                        className={`q-opt ${isSelected ? 'on' : ''}`}
+                        onClick={() => handleSelectAnswer(opt)}
+                      >
+                        <span className="k">{letter}</span>
+                        <span>{cleanLabel}</span>
+                      </button>
+                    );
+                  })}
                 </div>
-              </div>
 
-              {/* Progress Pills */}
-              <div style={{ display: 'flex', gap: '6px', marginBottom: '20px' }}>
-                {practiceQuestions.map((_, idx) => {
-                  const isCurrent = idx === currentQIdx;
-                  const isAnswered = practiceAnswers[idx] !== undefined;
-                  return (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => setCurrentQIdx(idx)}
-                      style={{
-                        padding: '6px 12px',
-                        borderRadius: 'var(--radius-sm)',
-                        fontSize: '12px',
-                        fontWeight: 600,
-                        border: isCurrent ? '2px solid var(--color-blue)' : '1px solid var(--color-border)',
-                        backgroundColor: isCurrent ? 'var(--color-blue-light)' : isAnswered ? '#e0f2fe' : 'var(--color-surface)',
-                        color: isCurrent ? 'var(--color-blue)' : 'var(--color-text-primary)',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease',
-                      }}
-                      aria-label={`Jump to question ${idx + 1}`}
-                    >
-                      Q{idx + 1} {isAnswered ? '✓' : ''}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Question Text */}
-              <h3 style={{ fontSize: '16px', fontWeight: 600, lineHeight: 1.5, marginBottom: '20px', color: 'var(--color-text-primary)' }}>
-                {currentQ.question}
-              </h3>
-
-              {/* Options List */}
-              <div className="options-list" style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
-                {(currentQ.options || []).map((opt, optIdx) => {
-                  const letter = opt.trim().charAt(0).toUpperCase();
-                  const isSelected = practiceAnswers[currentQIdx] === letter;
-
-                  return (
-                    <button
-                      key={optIdx}
-                      type="button"
-                      className={`option-button ${isSelected ? 'selected' : ''}`}
-                      onClick={() => handleSelectAnswer(opt)}
-                      style={{
-                        textAlign: 'left',
-                        padding: '12px 16px',
-                        borderRadius: 'var(--radius-sm)',
-                        border: isSelected ? '2px solid var(--color-blue)' : '1px solid var(--color-border)',
-                        backgroundColor: isSelected ? 'var(--color-blue-light)' : '#ffffff',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        fontSize: '14px',
-                        transition: 'all 0.1s ease',
-                      }}
-                    >
-                      <span style={{ fontWeight: 700, width: '24px', color: isSelected ? 'var(--color-blue)' : 'var(--color-text-secondary)' }}>
-                        {letter})
-                      </span>
-                      <span style={{ color: 'var(--color-text-primary)' }}>
-                        {opt.substring(opt.indexOf(')') + 1).trim() || opt}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Navigation Controls & Submit */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--color-border)', paddingTop: '16px' }}>
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  onClick={() => setCurrentQIdx((prev) => Math.max(0, prev - 1))}
-                  disabled={currentQIdx === 0}
-                  style={{ fontSize: '13px', padding: '6px 14px' }}
-                >
-                  ← Previous Question
-                </button>
-
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  {currentQIdx < totalQuestions - 1 ? (
-                    <button
-                      type="button"
-                      className="btn-secondary"
-                      onClick={() => setCurrentQIdx((prev) => Math.min(totalQuestions - 1, prev + 1))}
-                      style={{ fontSize: '13px', padding: '6px 14px' }}
-                    >
-                      Next Question →
-                    </button>
-                  ) : null}
-
+                <div className="row between mt16">
                   <button
                     type="button"
-                    className="btn-primary"
-                    onClick={handleSubmitPractice}
-                    disabled={isSubmittingMcq || answeredCount === 0}
-                    style={{ fontSize: '13px', padding: '6px 16px' }}
+                    className="btn"
+                    disabled={currentQIdx === 0}
+                    onClick={() => setCurrentQIdx((prev) => Math.max(0, prev - 1))}
                   >
-                    {isSubmittingMcq ? 'Evaluating Session...' : `Submit Practice Session (${answeredCount}/${totalQuestions})`}
+                    ← Previous
                   </button>
+
+                  <div className="row">
+                    {currentQIdx < totalQuestions - 1 && (
+                      <button
+                        type="button"
+                        className="btn"
+                        onClick={() => setCurrentQIdx((prev) => Math.min(totalQuestions - 1, prev + 1))}
+                      >
+                        Next →
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="btn primary"
+                      disabled={isSubmittingMcq || answeredCount === 0}
+                      onClick={handleSubmitPractice}
+                    >
+                      {isSubmittingMcq ? <Spinner /> : `Submit answers (${answeredCount}/${totalQuestions})`}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Question Navigator on the Right */}
+              <div className="col">
+                <div className="card">
+                  <h3>Question Navigator</h3>
+                  <p className="hint">{answeredCount} of {totalQuestions} answered</p>
+                  <div className="q-nav mt16">
+                    {practiceQuestions.map((_, k) => {
+                      const isAns = practiceAnswers[k] !== undefined;
+                      const isCur = k === currentQIdx;
+                      return (
+                        <button
+                          key={k}
+                          type="button"
+                          className={`${isAns ? 'ans' : ''} ${isCur ? 'cur' : ''}`}
+                          onClick={() => setCurrentQIdx(k)}
+                        >
+                          {k + 1}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="card tip small">
+                  Take your time analyzing each memory address and C operator. You can review all answers before final submission.
                 </div>
               </div>
             </div>
           )}
 
-          {/* Mode 1: Comprehensive Practice Results View */}
+          {/* Mode 1: Results View */}
           {practiceSubmitted && practiceResult && (
-            <div className="card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
-                <div>
-                  <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0, color: 'var(--color-text-primary)' }}>
-                    Practice Session Results: {currentTopic}
-                  </h3>
-                  <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
-                    Authoritative Backend Evaluation • 5 Grounded Practice Questions
-                  </span>
+            <div className="col" style={{ gap: 20 }}>
+              <div className="card tip row" style={{ gap: 20 }}>
+                <div
+                  className="ring"
+                  style={{
+                    background: `conic-gradient(${
+                      practiceResult.score >= 85 ? 'var(--green)' : practiceResult.score >= 60 ? 'var(--primary)' : 'var(--amber)'
+                    } ${(practiceResult.score || 0) * 3.6}deg, #dfe3ee 0)`,
+                  }}
+                >
+                  <span>{Math.round(practiceResult.score || 0)}%</span>
                 </div>
-                <span className={practiceResult.score >= 60 ? 'badge-green' : 'badge-red'} style={{ fontSize: '13px', padding: '4px 10px' }}>
-                  {practiceResult.score >= 60 ? '✓ Practice Passed' : 'Needs Review'}
+                <div className="grow">
+                  <h2>
+                    {practiceResult.score >= 85
+                      ? 'Outstanding! You have mastered these conceptual checks.'
+                      : practiceResult.score >= 60
+                      ? 'Solid performance! Ready for deeper C coding exercises.'
+                      : 'Good attempt. Review the step-by-step explanations below.'}
+                  </h2>
+                  <p className="muted mt8">
+                    {practiceResult.feedback || 'Detailed evaluation of your practice session.'}
+                  </p>
+                </div>
+                <span className={`pill ${practiceResult.score >= 60 ? 'green' : 'amber'}`}>
+                  {practiceResult.score >= 60 ? 'Passed' : 'Needs Review'}
                 </span>
               </div>
 
-              {/* Performance Stats Grid */}
-              <div className="stats-grid" style={{ marginBottom: '20px' }}>
-                <div className="stat-box">
-                  <div className="stat-label">Score</div>
-                  <div className="stat-value" style={{ color: practiceResult.score >= 60 ? 'var(--color-green)' : 'var(--color-red)' }}>
-                    {practiceResult.score} / 100
-                  </div>
+              <div className="grid g4">
+                <div className="card stat">
+                  <span className="muted small">Score</span>
+                  <div className="num">{practiceResult.score} / 100</div>
+                  <Bar value={practiceResult.score} />
                 </div>
-                <div className="stat-box">
-                  <div className="stat-label">Accuracy</div>
-                  <div className="stat-value">
-                    {Math.round(practiceResult.accuracy * 100)}%
-                  </div>
+                <div className="card stat">
+                  <span className="muted small">Accuracy</span>
+                  <div className="num">{Math.round(practiceResult.accuracy * 100)}%</div>
+                  <Bar value={Math.round(practiceResult.accuracy * 100)} tone="green" />
                 </div>
-                <div className="stat-box">
-                  <div className="stat-label">Correct Answers</div>
-                  <div className="stat-value">
-                    {practiceResult.correct_count} / {practiceResult.total_questions}
-                  </div>
+                <div className="card stat">
+                  <span className="muted small">Correct</span>
+                  <div className="num">{practiceResult.correct_count} / {practiceResult.total_questions}</div>
                 </div>
-                <div className="stat-box">
-                  <div className="stat-label">Time Taken</div>
-                  <div className="stat-value">
-                    {practiceResult.time_taken_seconds} sec
-                  </div>
+                <div className="card stat">
+                  <span className="muted small">Time Taken</span>
+                  <div className="num">{practiceResult.time_taken_seconds}s</div>
                 </div>
               </div>
 
-              {/* Weak Concepts Alert Box */}
+              {/* Weak Concepts */}
               {practiceResult.weak_concepts && practiceResult.weak_concepts.length > 0 && (
-                <div
-                  style={{
-                    backgroundColor: 'var(--color-red-light)',
-                    border: '1px solid var(--color-red-border)',
-                    borderRadius: 'var(--radius-sm)',
-                    padding: '14px 18px',
-                    marginBottom: '20px',
-                    color: 'var(--color-red)',
-                    fontSize: '13px',
-                  }}
-                  role="region"
-                  aria-label="Weak Concepts Review"
-                >
-                  <strong style={{ display: 'block', marginBottom: '4px' }}>
-                    ⚠️ Weak Concepts Identified for Focused Revision:
-                  </strong>
-                  <span>{practiceResult.weak_concepts.join(' • ')}</span>
+                <div className="notice">
+                  <strong>Concepts to Review: </strong>
+                  {practiceResult.weak_concepts.join(' • ')}
                 </div>
               )}
 
-              {/* Feedback Text */}
-              <div style={{ backgroundColor: 'var(--color-surface-subtle)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', padding: '14px', marginBottom: '24px' }}>
-                <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '4px' }}>Learning Twin Analysis:</div>
-                <div style={{ fontSize: '13px', color: 'var(--color-text-primary)', lineHeight: 1.5 }}>
-                  {practiceResult.feedback}
-                </div>
-              </div>
-
-              {/* Detailed Breakdown for All 5 Questions */}
-              <h4 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '12px', color: 'var(--color-text-primary)' }}>
-                Detailed Question Review (5 Questions):
-              </h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '24px' }}>
-                {(practiceResult.results || []).map((item, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      border: '1px solid var(--color-border)',
-                      borderRadius: 'var(--radius-sm)',
-                      padding: '14px',
-                      backgroundColor: item.is_correct ? 'var(--color-surface)' : 'var(--color-surface-subtle)',
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <span style={{ fontWeight: 700, fontSize: '13px' }}>Question {idx + 1}: {item.concept}</span>
-                      <span className={item.is_correct ? 'badge-green' : 'badge-red'}>
-                        {item.is_correct ? '✓ Correct' : '× Incorrect'}
+              {/* Detailed Breakdown */}
+              <div className="card">
+                <h3>Detailed Question Review</h3>
+                <div className="col mt16" style={{ gap: 14 }}>
+                  {(practiceResult.results || []).map((item, idx) => (
+                    <div key={idx} className="list-item" style={{ alignItems: 'flex-start' }}>
+                      <span className={`pill ${item.is_correct ? 'green' : 'red'}`} style={{ marginTop: 2 }}>
+                        {item.is_correct ? 'Correct' : 'Review'}
                       </span>
+                      <div className="grow small">
+                        <strong>{idx + 1}. {item.question}</strong>
+                        <div className="hint mt8">
+                          Your answer: <strong>{item.student_answer || '—'}</strong> · Correct answer: <strong style={{ color: 'var(--green)' }}>{item.correct_answer}</strong>
+                        </div>
+                        <div className="hint mt8">
+                          <strong>Explanation:</strong> {item.explanation}
+                        </div>
+                      </div>
+                      {onAskTutorWithContext && !item.is_correct && (
+                        <button
+                          type="button"
+                          className="btn ghost sm"
+                          onClick={() => onAskTutorWithContext({ question: item.question, title: item.concept })}
+                        >
+                          <Icon name="chat" size={14} /> Ask Tutor
+                        </button>
+                      )}
                     </div>
-                    <div style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px', color: 'var(--color-text-primary)' }}>
-                      {item.question}
-                    </div>
-                    <div style={{ fontSize: '13px', display: 'flex', gap: '20px', marginBottom: '8px' }}>
-                      <span>Your answer: <strong>{item.student_answer}</strong></span>
-                      <span>Correct answer: <strong style={{ color: 'var(--color-green)' }}>{item.correct_answer}</strong></span>
-                    </div>
-                    <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', borderTop: '1px solid var(--color-border)', paddingTop: '6px' }}>
-                      <strong>Explanation:</strong> {item.explanation}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
 
-              {/* Action Buttons */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--color-border)', paddingTop: '16px', flexWrap: 'wrap', gap: '10px' }}>
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  onClick={handleResetPractice}
-                >
-                  Practice Again ⟳
-                </button>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <button
-                    type="button"
-                    className="btn-secondary"
-                    onClick={() => onNavigate('tutor')}
-                  >
-                    Ask AI Tutor ?
+                <div className="row between mt24">
+                  <button type="button" className="btn" onClick={handleResetPractice}>
+                    Practice Again
                   </button>
-                  <button
-                    type="button"
-                    className="btn-primary"
-                    onClick={() => onNavigate('tests')}
-                  >
-                    Take Full 10-Question Assessment Test →
-                  </button>
+                  <div className="row">
+                    <button type="button" className="btn" onClick={() => onNavigate('tutor')}>
+                      <Icon name="chat" size={16} /> Open Learning Tutor
+                    </button>
+                    <button type="button" className="btn primary" onClick={() => onNavigate('tests')}>
+                      Take Assessment →
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -590,488 +519,262 @@ export default function Practice({
         </>
       )}
 
-      {/* Mode 2: AI Adaptive Coding Challenge with Scaffolding Hint Ladder */}
+      {/* Mode 2: AI Adaptive Coding Challenge & Sandbox Workspace */}
       {activeTab === 'ai_challenge' && (
-        <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span className="badge-blue">GenAI Adaptive Practice with Mistral 7B</span>
-              <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
-                Curriculum Grounded • XGBoost Adaptive
-              </span>
+        <div className="col" style={{ gap: 20 }}>
+          <div className="row between">
+            <div>
+              <span className="eyebrow">C99 Code Practice</span>
+              <h2 className="mt8">{currentChallenge?.title || `${currentTopic} C Programming Challenge`}</h2>
             </div>
             <button
               type="button"
-              className="btn-pill"
+              className="btn sm"
               onClick={() => handleGenerateAiPractice(studentId, currentTopic)}
               disabled={isLoadingAi}
             >
-              {isLoadingAi ? 'Generating Challenge...' : 'Regenerate Challenge ⟳'}
+              <Icon name="refresh" size={14} /> {isLoadingAi ? 'Loading...' : 'New Challenge'}
             </button>
           </div>
 
-          {isLoadingAi && (
-            <div style={{ textAlign: 'center', padding: '40px', color: 'var(--color-text-secondary)' }}>
-              Generating mastery-adapted C coding challenge with scaffolded hint ladder for Student <strong>{studentId}</strong>...
-            </div>
-          )}
+          {isLoadingAi && <Loading />}
 
           {!isLoadingAi && aiProblems && currentChallenge && (
-            <div>
-              {/* Challenge Information Bar */}
-              <div style={{ backgroundColor: 'var(--color-surface-subtle)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', padding: '12px 16px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', fontSize: '13px' }}>
-                <div>
-                  Adapted for: <strong>Student {aiProblems.student_id}</strong> &nbsp;•&nbsp; 
-                  Target Mastery: <strong>{aiProblems.target_mastery || '1.00'}</strong> &nbsp;•&nbsp; 
-                  Difficulty: <strong className="badge-blue" style={{ fontSize: '11px', padding: '2px 8px', marginLeft: '4px' }}>{aiProblems.recommended_difficulty || currentChallenge.difficulty || 'Advanced'}</strong>
-                  {aiProblems.learning_pace && (
-                    <span> &nbsp;•&nbsp; Pace: <strong>{aiProblems.learning_pace}</strong></span>
-                  )}
-                </div>
-                <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
-                  Model: <strong>{aiProblems.model || 'mistral:7b'}</strong>
-                </div>
-              </div>
-
-              {/* Problem Statement Section */}
-              <div style={{ marginBottom: '24px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '10px', color: 'var(--color-text-primary)' }}>
-                  {currentChallenge.title || `${currentTopic}: Adaptive Coding Challenge`}
-                </h3>
-                <p style={{ fontSize: '14px', lineHeight: 1.6, marginBottom: '16px', color: 'var(--color-text-primary)', whiteSpace: 'pre-line' }}>
-                  {currentChallenge.problem_statement || currentChallenge.description}
-                </p>
-
-                {/* Specification Table / Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px', marginBottom: '16px', backgroundColor: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', padding: '14px' }}>
-                  <div>
-                    <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-text-secondary)', marginBottom: '4px' }}>Input Format:</div>
-                    <div style={{ fontSize: '13px', color: 'var(--color-text-primary)' }}>{currentChallenge.input_format || 'Standard input or test harness initial parameters.'}</div>
+            <div className="coding-layout">
+              {/* Left Column: Problem, Hints, Specifications */}
+              <div className="col" style={{ gap: 16 }}>
+                <div className="card col" style={{ gap: 12 }}>
+                  <div className="row between">
+                    <span className="pill violet">{currentTopic}</span>
+                    <span className="pill">Difficulty: {aiProblems.recommended_difficulty || 'Standard'}</span>
                   </div>
-                  <div>
-                    <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-text-secondary)', marginBottom: '4px' }}>Output Format:</div>
-                    <div style={{ fontSize: '13px', color: 'var(--color-text-primary)' }}>{currentChallenge.output_format || 'Exact output printed to stdout.'}</div>
+                  <p style={{ lineHeight: 1.6, whiteSpace: 'pre-line' }}>
+                    {currentChallenge.problem_statement || currentChallenge.description}
+                  </p>
+                </div>
+
+                {/* Input/Output Specifications */}
+                <div className="card col" style={{ gap: 10 }}>
+                  <span className="eyebrow plain">I/O Specifications</span>
+                  <div className="small">
+                    <strong>Input Format: </strong>
+                    <span className="muted">{currentChallenge.input_format || 'Standard input (stdin).'}</span>
                   </div>
-                  <div style={{ gridColumn: '1 / -1' }}>
-                    <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-text-secondary)', marginBottom: '4px' }}>Constraints:</div>
-                    <div style={{ fontSize: '13px', color: 'var(--color-text-primary)' }}>{currentChallenge.constraints || 'Standard C99 compliance, no invalid memory references.'}</div>
+                  <div className="small">
+                    <strong>Output Format: </strong>
+                    <span className="muted">{currentChallenge.output_format || 'Exact output printed to stdout.'}</span>
+                  </div>
+                  <div className="small">
+                    <strong>Constraints: </strong>
+                    <span className="muted">{currentChallenge.constraints || 'Standard C99 compliance, no segmentation faults.'}</span>
                   </div>
                 </div>
 
-                {/* Sample Test Case Box */}
+                {/* Sample Test Case */}
                 {(currentChallenge.sample_input || currentChallenge.sample_output) && (
-                  <div style={{ backgroundColor: 'var(--color-surface-subtle)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', padding: '14px', marginBottom: '20px' }}>
-                    <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '8px' }}>Sample Test Case:</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '8px' }}>
+                  <div className="card soft col" style={{ gap: 10 }}>
+                    <span className="eyebrow plain">Sample Test Case</span>
+                    <div className="grid g2">
                       {currentChallenge.sample_input && (
                         <div>
-                          <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: '2px' }}>Sample Input:</div>
-                          <pre style={{ backgroundColor: '#fff', border: '1px solid var(--color-border)', padding: '6px 10px', borderRadius: 'var(--radius-sm)', fontSize: '12px', fontFamily: 'var(--font-mono)' }}>
+                          <span className="tiny muted">Sample Input:</span>
+                          <pre className="src" style={{ margin: '4px 0', fontFamily: 'var(--font-mono)' }}>
                             {currentChallenge.sample_input}
                           </pre>
                         </div>
                       )}
                       {currentChallenge.sample_output && (
                         <div>
-                          <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: '2px' }}>Sample Output:</div>
-                          <pre style={{ backgroundColor: '#fff', border: '1px solid var(--color-border)', padding: '6px 10px', borderRadius: 'var(--radius-sm)', fontSize: '12px', fontFamily: 'var(--font-mono)' }}>
+                          <span className="tiny muted">Sample Output:</span>
+                          <pre className="src" style={{ margin: '4px 0', fontFamily: 'var(--font-mono)' }}>
                             {currentChallenge.sample_output}
                           </pre>
                         </div>
                       )}
                     </div>
                     {currentChallenge.sample_explanation && (
-                      <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '4px' }}>
-                        <strong>Explanation:</strong> {currentChallenge.sample_explanation}
-                      </div>
+                      <p className="tiny muted">{currentChallenge.sample_explanation}</p>
                     )}
                   </div>
                 )}
 
-                {/* Interactive 4-Tier Scaffolded Hint Ladder */}
-                <div style={{ backgroundColor: 'var(--color-surface-subtle)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', padding: '16px', marginBottom: '24px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                    <h4 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-text-primary)' }}>
-                      Scaffolded Hint Ladder (Progressive Guidance):
-                    </h4>
-                    <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
-                      Click to reveal progressive hints without spoiling the solution
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {[
-                      { key: 'hint_1', label: '💡 Hint 1: Conceptual Guidance', text: currentChallenge.hint_1 || (currentChallenge.hints && currentChallenge.hints[0]) },
-                      { key: 'hint_2', label: '🔍 Hint 2: Specific Approach', text: currentChallenge.hint_2 || (currentChallenge.hints && currentChallenge.hints[1]) },
-                      { key: 'hint_3', label: '⚙️ Hint 3: Algorithmic Guidance', text: currentChallenge.hint_3 || (currentChallenge.hints && currentChallenge.hints[2]) },
-                      { key: 'hint_4', label: '🔑 Hint 4: Pseudocode / Implementation Direction', text: currentChallenge.hint_4 || (currentChallenge.hints && currentChallenge.hints[3]) },
-                    ].map((h, hIdx) => {
-                      const isRevealed = !!revealedHints[h.key];
-                      if (!h.text) return null;
-                      return (
-                        <div key={hIdx} style={{ border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', backgroundColor: '#fff' }}>
-                          <button
-                            type="button"
-                            onClick={() => setRevealedHints((prev) => ({ ...prev, [h.key]: !prev[h.key] }))}
-                            style={{
-                              width: '100%',
-                              textAlign: 'left',
-                              padding: '10px 14px',
-                              background: 'transparent',
-                              border: 'none',
-                              cursor: 'pointer',
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                              fontSize: '13px',
-                              fontWeight: 600,
-                              color: isRevealed ? 'var(--color-blue)' : 'var(--color-text-primary)',
-                            }}
-                          >
-                            <span>{h.label}</span>
-                            <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
-                              {isRevealed ? 'Hide ▲' : 'Reveal ▼'}
-                            </span>
-                          </button>
-                          {isRevealed && (
-                            <div style={{ padding: '0 14px 12px 14px', fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.5, borderTop: '1px dashed var(--color-border)', paddingTop: '8px' }}>
-                              {h.text}
-                            </div>
-                          )}
+                {/* Progressive 4-Tier Hint Ladder */}
+                <div className="card col" style={{ gap: 12 }}>
+                  <span className="eyebrow plain">Progressive Hint Ladder</span>
+                  <p className="hint">Reveal hints as needed without spoiling the entire implementation.</p>
+                  {[
+                    { key: 'hint_1', label: 'Hint 1: Conceptual Foundation', text: currentChallenge.hint_1 || (currentChallenge.hints && currentChallenge.hints[0]) },
+                    { key: 'hint_2', label: 'Hint 2: Approach & Memory', text: currentChallenge.hint_2 || (currentChallenge.hints && currentChallenge.hints[1]) },
+                    { key: 'hint_3', label: 'Hint 3: Algorithmic Logic', text: currentChallenge.hint_3 || (currentChallenge.hints && currentChallenge.hints[2]) },
+                    { key: 'hint_4', label: 'Hint 4: Implementation Guidance', text: currentChallenge.hint_4 || (currentChallenge.hints && currentChallenge.hints[3]) },
+                  ].map((h, hIdx) => {
+                    const isRevealed = Boolean(revealedHints[h.key]);
+                    if (!h.text) return null;
+                    return (
+                      <div key={hIdx} className="choice" style={{ padding: '10px 14px' }}>
+                        <div
+                          className="row between"
+                          style={{ cursor: 'pointer' }}
+                          onClick={() => setRevealedHints((p) => ({ ...p, [h.key]: !p[h.key] }))}
+                        >
+                          <strong className="small">{h.label}</strong>
+                          <span className="tiny muted">{isRevealed ? 'Hide' : 'Reveal'}</span>
                         </div>
-                      );
-                    })}
-                  </div>
+                        {isRevealed && (
+                          <p className="small mt8" style={{ color: 'var(--ink-2)', lineHeight: 1.5 }}>
+                            {h.text}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
+              </div>
 
-                {/* C Language Source Editor Section */}
-                <div style={{ marginBottom: '20px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-text-primary)' }}>
-                      C Source Code Editor (C99 • Sandboxed Execution)
+              {/* Right Column: Code Editor & Execution Terminal */}
+              <div className="col" style={{ gap: 16 }}>
+                <div className="code-editor-box">
+                  <div className="code-editor-header">
+                    <div className="row" style={{ gap: 8 }}>
+                      <Icon name="code" size={15} />
+                      <span>solution.c (C99 Standard)</span>
                     </div>
                     <button
                       type="button"
-                      className="btn-pill"
+                      className="btn ghost sm"
+                      style={{ color: '#cbd5e1', padding: '2px 8px' }}
                       onClick={handleResetCode}
-                      style={{ fontSize: '11px' }}
                     >
-                      Reset Starter Code ↺
+                      Reset Starter Code
                     </button>
                   </div>
 
                   <textarea
+                    className="code-editor-textarea"
                     value={studentCode}
                     onChange={(e) => setStudentCode(e.target.value)}
-                    rows={24}
+                    rows={18}
                     spellCheck="false"
-                    data-ms-editor="false"
-                    autoCapitalize="none"
-                    autoComplete="off"
-                    autoCorrect="off"
-                    data-gramm="false"
-                    data-gramm_editor="false"
-                    data-enable-grammarly="false"
-                    style={{
-                      width: '100%',
-                      minHeight: '480px',
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '13px',
-                      lineHeight: 1.5,
-                      padding: '16px 18px',
-                      backgroundColor: '#0f172a',
-                      color: '#f8fafc',
-                      borderRadius: 'var(--radius-sm)',
-                      border: '1px solid #334155',
-                      boxSizing: 'border-box',
-                      resize: 'vertical',
-                    }}
                     placeholder="// Write your C solution here..."
-                    aria-label="C code editor"
                   />
-                </div>
 
-                {/* Custom Program Input (stdin) */}
-                <div style={{ marginBottom: '16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                    <label htmlFor="custom-stdin-input" style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-primary)' }}>
-                      Standard Input (stdin):
-                    </label>
-                    <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
-                      Passed to stdin (scanf / fgets) during program execution
+                  {/* Standard Input (stdin) Panel */}
+                  <div style={{ background: '#151828', padding: '10px 16px', borderTop: '1px solid #282e46' }}>
+                    <div className="row between" style={{ marginBottom: 6 }}>
+                      <span className="tiny muted" style={{ color: '#94a3b8' }}>Standard Input (stdin):</span>
+                    </div>
+                    <textarea
+                      className="input"
+                      style={{
+                        background: '#0f121e',
+                        color: '#f8fafc',
+                        border: '1px solid #282e46',
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '12px',
+                        padding: 8,
+                      }}
+                      rows={2}
+                      value={customStdin}
+                      onChange={(e) => setCustomStdin(e.target.value)}
+                      placeholder="Pass program inputs (scanf / fgets)..."
+                    />
+                  </div>
+
+                  <div className="code-toolbar">
+                    <span className="tiny muted" style={{ color: '#94a3b8' }}>
+                      C99 Compiler · Protected Execution
                     </span>
-                  </div>
-                  <textarea
-                    id="custom-stdin-input"
-                    value={customStdin}
-                    onChange={(e) => setCustomStdin(e.target.value)}
-                    rows={3}
-                    spellCheck="false"
-                    data-ms-editor="false"
-                    autoCapitalize="none"
-                    autoComplete="off"
-                    autoCorrect="off"
-                    data-gramm="false"
-                    data-gramm_editor="false"
-                    data-enable-grammarly="false"
-                    style={{
-                      width: '100%',
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '12px',
-                      padding: '8px 12px',
-                      borderRadius: 'var(--radius-sm)',
-                      border: '1px solid var(--color-border)',
-                      backgroundColor: 'var(--color-surface-subtle)',
-                      boxSizing: 'border-box',
-                      resize: 'vertical',
-                    }}
-                    placeholder="Enter test inputs here (e.g. 5\n10 20 30 40 50)..."
-                  />
-                </div>
-
-                {/* Editor Action Buttons */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
-                  <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
-                    Protected execution via 64-bit GCC compiler (C99 • Sandboxed • Configurable 30.0s Timeout).
-                  </span>
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <button
-                      type="button"
-                      className="btn-secondary"
-                      onClick={handleRunCode}
-                      disabled={isRunningCode || isSubmittingCode}
-                    >
-                      {isRunningCode ? 'Compiling & Running...' : '▶ Run Code'}
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-primary"
-                      onClick={handleSubmitCode}
-                      disabled={isSubmittingCode || isRunningCode}
-                    >
-                      {isSubmittingCode ? 'Evaluating Test Cases...' : '✓ Submit Code'}
-                    </button>
+                    <div className="row">
+                      <button
+                        type="button"
+                        className="btn sm"
+                        onClick={handleRunCode}
+                        disabled={isRunningCode || isSubmittingCode}
+                      >
+                        {isRunningCode ? <Spinner /> : <><Icon name="play" size={14} /> Run Code</>}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn primary sm"
+                        onClick={handleSubmitCode}
+                        disabled={isSubmittingCode || isRunningCode}
+                      >
+                        {isSubmittingCode ? <Spinner /> : <><Icon name="check" size={14} /> Submit Code</>}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                {/* Compilation & Execution Results Panel */}
+                {/* Execution Results Terminal Panel */}
                 {execResult && (
                   <div
+                    className="card"
                     style={{
-                      backgroundColor:
+                      borderLeft: `4px solid ${
                         execResult.status === 'ACCEPTED' || execResult.passed
-                          ? 'var(--color-green-light)'
+                          ? 'var(--green)'
                           : execResult.status === 'WRONG_ANSWER'
-                          ? '#fff7ed'
-                          : execResult.status === 'SUCCESS'
-                          ? '#eff6ff'
-                          : 'var(--color-red-light)',
-                      border: `1px solid ${
-                        execResult.status === 'ACCEPTED' || execResult.passed
-                          ? 'var(--color-green-border)'
-                          : execResult.status === 'WRONG_ANSWER'
-                          ? '#fed7aa'
-                          : execResult.status === 'SUCCESS'
-                          ? '#bfdbfe'
-                          : 'var(--color-red-border)'
+                          ? 'var(--amber)'
+                          : 'var(--red)'
                       }`,
-                      borderRadius: 'var(--radius-sm)',
-                      padding: '16px 18px',
-                      marginBottom: '16px',
                     }}
-                    role="region"
-                    aria-label="Code execution results"
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
-                      <div
-                        style={{
-                          fontWeight: 700,
-                          fontSize: '15px',
-                          color:
-                            execResult.status === 'ACCEPTED' || execResult.passed
-                              ? 'var(--color-green)'
-                              : execResult.status === 'WRONG_ANSWER'
-                              ? '#ea580c'
-                              : execResult.status === 'SUCCESS'
-                              ? 'var(--color-blue)'
-                              : 'var(--color-red)',
-                        }}
-                      >
+                    <div className="row between">
+                      <strong className="small">
                         {execResult.status === 'ACCEPTED' || execResult.passed
-                          ? '✓ Accepted — Test Case Passed!'
+                          ? 'Accepted — All Tests Passed'
                           : execResult.status === 'WRONG_ANSWER'
-                          ? '× Wrong Answer — Output Mismatch'
+                          ? 'Wrong Answer — Output Mismatch'
                           : execResult.status === 'COMPILATION_ERROR'
-                          ? '× Compilation Failed'
+                          ? 'Compilation Error'
                           : execResult.status === 'RUNTIME_ERROR'
-                          ? `× Runtime Error (Exit Code: ${execResult.exit_code ?? -1})`
+                          ? `Runtime Error (Exit Code: ${execResult.exit_code ?? -1})`
                           : execResult.status === 'TIMEOUT'
-                          ? `⏱ Time Limit Exceeded (${execResult.timeout_limit_seconds || 30.0}s Timeout)`
-                          : '▶ Program Executed Successfully'}
-                      </div>
-                      <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
-                        Execution Time: <strong>{execResult.execution_time_seconds ?? 0}s</strong>
-                      </div>
+                          ? 'Time Limit Exceeded'
+                          : 'Program Executed Successfully'}
+                      </strong>
+                      <span className="pill">Execution Time: {execResult.execution_time_seconds ?? 0}s</span>
                     </div>
 
                     {execResult.diagnostic_message && (
-                      <p style={{ fontSize: '13px', margin: '0 0 12px 0', color: 'var(--color-text-primary)' }}>
-                        {execResult.diagnostic_message}
-                      </p>
+                      <p className="hint mt8">{execResult.diagnostic_message}</p>
                     )}
 
-                    {/* Compilation Error Display */}
-                    {(execResult.status === 'COMPILATION_ERROR' || execResult.compiler_output) && !execResult.success && (
-                      <div style={{ marginBottom: '12px' }}>
-                        <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-red)', marginBottom: '4px' }}>
-                          GCC Compiler Diagnostics (stderr):
-                        </div>
-                        <pre
-                          style={{
-                            backgroundColor: '#0f172a',
-                            color: '#f87171',
-                            padding: '12px 14px',
-                            borderRadius: 'var(--radius-sm)',
-                            fontSize: '12px',
-                            fontFamily: 'var(--font-mono)',
-                            overflowX: 'auto',
-                            whiteSpace: 'pre-wrap',
-                            margin: 0,
-                          }}
-                        >
-                          {execResult.compiler_output || execResult.stderr || 'Compilation failed without output.'}
-                        </pre>
-                      </div>
-                    )}
-
-                    {/* Runtime Error Display */}
-                    {execResult.status === 'RUNTIME_ERROR' && execResult.stderr && (
-                      <div style={{ marginBottom: '12px' }}>
-                        <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-red)', marginBottom: '4px' }}>
-                          Runtime Diagnostics (stderr):
-                        </div>
-                        <pre
-                          style={{
-                            backgroundColor: '#0f172a',
-                            color: '#f87171',
-                            padding: '12px 14px',
-                            borderRadius: 'var(--radius-sm)',
-                            fontSize: '12px',
-                            fontFamily: 'var(--font-mono)',
-                            overflowX: 'auto',
-                            whiteSpace: 'pre-wrap',
-                            margin: 0,
-                          }}
-                        >
-                          {execResult.stderr}
-                        </pre>
-                      </div>
-                    )}
-
-                    {/* Timeout Guidance */}
-                    {execResult.status === 'TIMEOUT' && (
-                      <div style={{ marginBottom: '12px', backgroundColor: '#fff', border: '1px solid var(--color-red-border)', padding: '10px 14px', borderRadius: 'var(--radius-sm)', fontSize: '12px', color: 'var(--color-red)' }}>
-                        <strong>Diagnostic Note:</strong> {execResult.notes || `The program took longer than ${execResult.timeout_limit_seconds || 30.0} seconds to finish. Check for infinite loops or waiting for unsupplied scanf() input.`}
-                      </div>
-                    )}
-
-                    {/* Wrong Answer Output Comparison */}
+                    {/* Output comparison for wrong answer */}
                     {execResult.status === 'WRONG_ANSWER' && (
-                      <div style={{ marginBottom: '12px' }}>
-                        {(execResult.stdin_input || execResult.input) && (
-                          <div style={{ marginBottom: '10px' }}>
-                            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-text-secondary)', marginBottom: '4px' }}>
-                              Failing Test Case Input (stdin):
-                            </div>
-                            <pre
-                              style={{
-                                backgroundColor: '#0f172a',
-                                color: '#93c5fd',
-                                padding: '8px 12px',
-                                borderRadius: 'var(--radius-sm)',
-                                fontSize: '12px',
-                                fontFamily: 'var(--font-mono)',
-                                overflowX: 'auto',
-                                whiteSpace: 'pre-wrap',
-                                margin: 0,
-                              }}
-                            >
-                              {execResult.stdin_input || execResult.input}
-                            </pre>
+                      <div className="grid g2 mt16">
+                        <div>
+                          <span className="tiny muted">Expected Output:</span>
+                          <div className="terminal-box" style={{ color: 'var(--green)' }}>
+                            {execResult.expected_output || '(Empty)'}
                           </div>
-                        )}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
-                          <div>
-                            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-green)', marginBottom: '4px' }}>
-                              Expected Output:
-                            </div>
-                            <pre
-                              style={{
-                                backgroundColor: '#0f172a',
-                                color: '#4ade80',
-                                padding: '10px 12px',
-                                borderRadius: 'var(--radius-sm)',
-                                fontSize: '12px',
-                                fontFamily: 'var(--font-mono)',
-                                overflowX: 'auto',
-                                whiteSpace: 'pre-wrap',
-                                margin: 0,
-                              }}
-                            >
-                              {execResult.expected_output || '(Empty expected output)'}
-                            </pre>
-                          </div>
-                          <div>
-                            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-red)', marginBottom: '4px' }}>
-                              Your Actual Output:
-                            </div>
-                            <pre
-                              style={{
-                                backgroundColor: '#0f172a',
-                                color: '#f87171',
-                                padding: '10px 12px',
-                                borderRadius: 'var(--radius-sm)',
-                                fontSize: '12px',
-                                fontFamily: 'var(--font-mono)',
-                                overflowX: 'auto',
-                                whiteSpace: 'pre-wrap',
-                                margin: 0,
-                              }}
-                            >
-                              {execResult.actual_output || '(No standard output generated)'}
-                            </pre>
+                        </div>
+                        <div>
+                          <span className="tiny muted">Your Actual Output:</span>
+                          <div className="terminal-box" style={{ color: 'var(--red)' }}>
+                            {execResult.actual_output || '(No stdout)'}
                           </div>
                         </div>
                       </div>
                     )}
 
-                    {/* Standard Output Display for Accepted or Success */}
+                    {/* Standard output on success */}
                     {(execResult.status === 'ACCEPTED' || execResult.status === 'SUCCESS' || execResult.passed) && (
-                      <div style={{ marginBottom: '10px' }}>
-                        <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-text-secondary)', marginBottom: '4px' }}>
-                          Program Output (stdout):
+                      <div className="mt16">
+                        <span className="tiny muted">Program Output (stdout):</span>
+                        <div className="terminal-box">
+                          {execResult.stdout || '(Program exited normally with empty stdout)'}
                         </div>
-                        <pre
-                          style={{
-                            backgroundColor: '#0f172a',
-                            color: '#f8fafc',
-                            padding: '10px 12px',
-                            borderRadius: 'var(--radius-sm)',
-                            fontSize: '12px',
-                            fontFamily: 'var(--font-mono)',
-                            overflowX: 'auto',
-                            whiteSpace: 'pre-wrap',
-                            margin: 0,
-                          }}
-                        >
-                          {execResult.stdout || '(No standard output generated)'}
-                        </pre>
                       </div>
                     )}
 
-                    {/* Stdin / Execution Notice Notes */}
-                    {execResult.notes && execResult.status !== 'TIMEOUT' && (
-                      <div style={{ marginTop: '8px', fontSize: '12px', color: '#475569', fontStyle: 'italic', padding: '6px 10px', backgroundColor: '#f1f5f9', borderRadius: '4px' }}>
-                        💡 {execResult.notes}
+                    {/* Compiler or Runtime errors */}
+                    {(execResult.status === 'COMPILATION_ERROR' || execResult.status === 'RUNTIME_ERROR') && (
+                      <div className="mt16">
+                        <span className="tiny muted">Diagnostics (stderr):</span>
+                        <div className="terminal-box" style={{ color: '#f87171' }}>
+                          {execResult.compiler_output || execResult.stderr || 'Execution failed.'}
+                        </div>
                       </div>
                     )}
                   </div>

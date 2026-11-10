@@ -1511,7 +1511,7 @@ class ResponseParser:
         norm_topic = normalize_topic_name(topic)
         defaults = _get_defaults_for_topic(norm_topic, tier, subtopic=subtopic)
 
-        if not raw_text or not raw_text.strip():
+        if not raw_text or not raw_text.strip() or "[Mock" in raw_text or raw_text.strip().startswith("[Mock LLM Output"):
             default_diag = {
                 "is_valid": True,
                 "diagram_type": diagram_type,
@@ -1531,7 +1531,7 @@ class ResponseParser:
                 common_mistakes=defaults["mistakes"],
                 understanding_check=defaults["check"],
                 personalization_applied=summary,
-                raw_content="",
+                raw_content=defaults["explanation"],
                 parsing_status="topic_grounded_fallback",
             )
 

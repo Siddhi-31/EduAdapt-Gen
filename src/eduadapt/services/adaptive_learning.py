@@ -762,6 +762,15 @@ class AdaptiveLearningService:
             )
         else:
             raw_state = get_student_state(student_id) or {}
+            if not raw_state:
+                raw_state = {
+                    "student_id": student_id,
+                    "mastery": profile.mastery_levels.get(topic, 0.0),
+                    "learning_pace": profile.preferred_pace,
+                    "explanation_style": profile.learning_style,
+                    "predicted_mastery_level": "Advanced" if profile.mastery_levels.get(topic, 0.0) >= 0.8 else ("Intermediate" if profile.mastery_levels.get(topic, 0.0) >= 0.5 else "Beginner"),
+                    "recommended_difficulty": "Hard" if profile.mastery_levels.get(topic, 0.0) >= 0.8 else ("Medium" if profile.mastery_levels.get(topic, 0.0) >= 0.5 else "Easy"),
+                }
             student_section = {
                 "student_id": student_id,
                 "found": True,

@@ -1,20 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { fetchTopicQuestions, submitAssessmentFull } from '../api/learningApi';
+import { Bar, Icon, Loading, Spinner, StatusPill } from '../components/ui';
 
 export default function Tests({
   studentId = 'S001',
   currentTopic = 'Pointers',
   onTestCompleted,
 }) {
-  const [testState, setTestState] = useState('intro'); // 'intro' | 'active' | 'confirm'
+  const [testState, setTestState] = useState('intro'); // 'intro' | 'active'
   const [questions, setQuestions] = useState([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answers, setAnswers] = useState({});
   const [startTime, setStartTime] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(600); // 10 minutes default
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [testError, setTestError] = useState(null);
+  const [isLoadingQuestions, setIsLoadingQuestions] = useState(true);
 
   useEffect(() => {
+    setIsLoadingQuestions(true);
     fetchTopicQuestions(studentId, currentTopic)
       .then((data) => {
         if (data && data.questions && data.questions.length > 0) {
@@ -22,15 +26,34 @@ export default function Tests({
         }
       })
       .catch((err) => {
-        console.warn('Tests fetch error:', err);
-        setTestError('Unable to load formal assessment questions.');
+        setTestError('Unable to load assessment questions: ' + (err.message || 'Check network connection'));
+      })
+      .finally(() => {
+        setIsLoadingQuestions(false);
       });
   }, [studentId, currentTopic]);
+
+  useEffect(() => {
+    if (testState !== 'active') return;
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          handleSubmitTest();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [testState, answers]);
 
   const handleStartTest = () => {
     setTestState('active');
     setStartTime(Date.now());
+    setTimeLeft(questions.length * 60 || 600);
     setCurrentIdx(0);
+    setAnswers({});
   };
 
   const handleSelectOption = (letter) => {
@@ -41,7 +64,9 @@ export default function Tests({
   };
 
   const handleSubmitTest = async () => {
+    if (isSubmitting) return;
     setIsSubmitting(true);
+    setTestError(null);
     const durationSec = Math.round((Date.now() - (startTime || Date.now())) / 1000) || 120;
 
     try {
@@ -52,226 +77,199 @@ export default function Tests({
           questions: questions,
           studentAnswers: answers,
           timeTaken: durationSec,
+          title: `Assessment: ${currentTopic}`,
         });
       }
     } catch (err) {
-      setTestError('Error submitting test: ' + (err.message || 'Check network connection'));
-    } finally {
+      setTestError('Error submitting test evaluation: ' + (err.message || 'Check network connection'));
       setIsSubmitting(false);
     }
   };
 
+  if (isLoadingQuestions) return <Loading />;
+
+  // Intro state
   if (testState === 'intro') {
     return (
-      <div className="tests-page">
-        <header className="page-header">
-          <h2 className="page-title">PPS Assessment: {currentTopic}</h2>
-          <p className="page-subtitle">
-            Formal 10-Question Diagnostic Assessment for Student <strong>{studentId}</strong>.
-          </p>
-        </header>
-
-        {testError && (
-          <div className="error-box" style={{ marginBottom: '16px' }} role="alert">
-            <h4>Notice</h4>
-            <p>{testError}</p>
+      <div className="page" style={{ maxWidth: 860 }}>
+        <div className="page-head">
+          <div>
+            <span className="eyebrow plain">Assessment</span>
+            <h1>Assessment: {currentTopic}</h1>
+            <p className="muted">
+              10-question evaluation for Student <strong>{studentId}</strong>.
+            </p>
           </div>
-        )}
+          <span className="pill violet">Course Evaluation</span>
+        </div>
 
-        <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <span className="badge-blue">Diagnostic Assessment (10 Questions)</span>
-            <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)' }}>
-              Course: Programming for Problem Solving (PPS)
-            </span>
+        {testError && <p className="error-box">{testError}</p>}
+
+        <div className="card col" style={{ gap: 20 }}>
+          <div className="row between">
+            <h3>Assessment Overview</h3>
+            <span className="pill green">10 Questions</span>
           </div>
 
-          <div style={{ marginBottom: '20px' }}>
-            <table className="kv-table" style={{ width: '100%', fontSize: '14px' }}>
-              <tbody>
-                <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
-                  <td style={{ padding: '8px 0', color: 'var(--color-text-secondary)' }}>Curriculum Topic</td>
-                  <td style={{ textAlign: 'right', fontWeight: 600 }}>{currentTopic}</td>
-                </tr>
-                <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
-                  <td style={{ padding: '8px 0', color: 'var(--color-text-secondary)' }}>Difficulty</td>
-                  <td style={{ textAlign: 'right', fontWeight: 600 }}>Adaptive Tier</td>
-                </tr>
-                <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
-                  <td style={{ padding: '8px 0', color: 'var(--color-text-secondary)' }}>Question Count</td>
-                  <td style={{ textAlign: 'right', fontWeight: 600 }}>{questions.length || 10} Questions</td>
-                </tr>
-                <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
-                  <td style={{ padding: '8px 0', color: 'var(--color-text-secondary)' }}>Passing Mastery Threshold</td>
-                  <td style={{ textAlign: 'right', fontWeight: 600 }}>60% (6/10) to advance topic</td>
-                </tr>
-                <tr>
-                  <td style={{ padding: '8px 0', color: 'var(--color-text-secondary)' }}>Estimated Time</td>
-                  <td style={{ textAlign: 'right', fontWeight: 600 }}>5–10 minutes</td>
-                </tr>
-              </tbody>
-            </table>
+          <div className="grid g2">
+            <div className="card soft col" style={{ padding: 14 }}>
+              <span className="tiny muted">Subject & Syllabus Unit</span>
+              <strong>Programming for Problem Solving (PPS)</strong>
+            </div>
+            <div className="card soft col" style={{ padding: 14 }}>
+              <span className="tiny muted">Target Curriculum Topic</span>
+              <strong>{currentTopic}</strong>
+            </div>
+            <div className="card soft col" style={{ padding: 14 }}>
+              <span className="tiny muted">Time Limit</span>
+              <strong>10 Minutes (60s / question)</strong>
+            </div>
+            <div className="card soft col" style={{ padding: 14 }}>
+              <span className="tiny muted">Target Passing Mastery</span>
+              <strong>85% Advancement Threshold (≥ 60% Passing)</strong>
+            </div>
           </div>
 
-          <button
-            type="button"
-            className="btn-primary"
-            onClick={handleStartTest}
-            disabled={questions.length === 0}
-            style={{ width: 'auto', padding: '8px 20px' }}
-          >
-            Start 10-Question Test →
-          </button>
+          <div className="card tip small">
+            <strong>Continuous Progress:</strong> Your score helps tailor subsequent practice problems and updates your topic mastery.
+          </div>
+
+          <div className="row between">
+            <span className="small muted">{questions.length} questions loaded from question bank</span>
+            <button
+              type="button"
+              className="btn primary"
+              onClick={handleStartTest}
+              disabled={questions.length === 0}
+            >
+              Start Assessment →
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
+  // Active Test State
   const q = questions[currentIdx] || {};
-  const currentAnswer = answers[currentIdx];
   const answeredCount = Object.keys(answers).length;
+  const currentLetter = answers[currentIdx];
 
   return (
-    <div className="tests-page">
-      <header className="page-header" style={{ marginBottom: '16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-          <div>
-            <h2 className="page-title" style={{ fontSize: '20px' }}>
-              {currentTopic} Assessment
-            </h2>
-            <p className="page-subtitle">
-              Question {currentIdx + 1} of {questions.length} • Concept: <strong>{q.concept || currentTopic}</strong>
-            </p>
+    <div className="page">
+      <div className="page-head">
+        <div>
+          <span className="eyebrow plain">Timed Evaluation</span>
+          <h1>Assessment: {currentTopic}</h1>
+          <p className="muted">Answer all 10 questions to complete this assessment.</p>
+        </div>
+        <div className="row">
+          <div className="card stat" style={{ padding: '8px 16px' }}>
+            <span className="muted tiny row">
+              <Icon name="clock" size={14} /> Time Remaining
+            </span>
+            <div className="num" style={{ fontSize: '1.3em', margin: 0 }}>
+              {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
+            </div>
           </div>
-          {/* Question Progress Dots */}
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-            {questions.map((_, idx) => {
-              const isAnswered = answers[idx] !== undefined;
-              const isCur = idx === currentIdx;
+        </div>
+      </div>
+
+      {testError && <p className="error-box">{testError}</p>}
+
+      <div className="grid" style={{ gridTemplateColumns: '2fr 1fr', alignItems: 'start' }}>
+        {/* Left Column: Current Question */}
+        <div className="card col" style={{ gap: 16 }}>
+          <div className="row between">
+            <span className="eyebrow">
+              Question {currentIdx + 1} of {questions.length}
+            </span>
+            <span className="pill violet">{q.concept || currentTopic}</span>
+          </div>
+
+          <h2 style={{ fontWeight: 500, fontSize: '1.25em', lineHeight: 1.5 }}>
+            {q.question}
+          </h2>
+
+          <div className="col" role="radiogroup">
+            {(q.options || []).map((opt, optIdx) => {
+              const letter = opt.trim().charAt(0).toUpperCase();
+              const isSelected = currentLetter === letter;
+              const cleanText = opt.substring(opt.indexOf(')') + 1).trim() || opt;
+
               return (
                 <button
-                  key={idx}
+                  key={optIdx}
                   type="button"
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    border: '1px solid var(--color-border)',
-                    borderRadius: 'var(--radius-sm)',
-                    fontWeight: 700,
-                    fontSize: '12px',
-                    cursor: 'pointer',
-                    backgroundColor: isCur
-                      ? 'var(--color-blue)'
-                      : isAnswered
-                      ? 'var(--color-green-light)'
-                      : '#ffffff',
-                    color: isCur
-                      ? '#ffffff'
-                      : isAnswered
-                      ? 'var(--color-green)'
-                      : 'var(--color-text-secondary)',
-                    borderColor: isCur ? 'var(--color-blue)' : 'var(--color-border)',
-                  }}
-                  onClick={() => setCurrentIdx(idx)}
-                  aria-label={`Jump to question ${idx + 1}`}
+                  role="radio"
+                  aria-checked={isSelected}
+                  className={`q-opt ${isSelected ? 'on' : ''}`}
+                  onClick={() => handleSelectOption(letter)}
                 >
-                  {idx + 1}
+                  <span className="k">{letter}</span>
+                  <span>{cleanText}</span>
                 </button>
               );
             })}
           </div>
-        </div>
-      </header>
 
-      {/* Question Card */}
-      <div className="card">
-        <h3 style={{ fontSize: '16px', fontWeight: 600, lineHeight: 1.5, marginBottom: '20px' }}>
-          {q.question}
-        </h3>
+          <div className="row between mt16">
+            <button
+              type="button"
+              className="btn"
+              disabled={currentIdx === 0}
+              onClick={() => setCurrentIdx((p) => Math.max(0, p - 1))}
+            >
+              ← Previous
+            </button>
 
-        <div className="options-list">
-          {(q.options || []).map((opt, idx) => {
-            const letter = opt.trim().charAt(0).toUpperCase();
-            const isSelected = currentAnswer === letter;
-            return (
+            <div className="row">
+              {currentIdx < questions.length - 1 ? (
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => setCurrentIdx((p) => Math.min(questions.length - 1, p + 1))}
+                >
+                  Next →
+                </button>
+              ) : null}
+
               <button
-                key={idx}
                 type="button"
-                className={`option-button ${isSelected ? 'selected' : ''}`}
-                onClick={() => handleSelectOption(letter)}
+                className="btn primary"
+                disabled={isSubmitting || answeredCount === 0}
+                onClick={handleSubmitTest}
               >
-                <span style={{ fontWeight: 700, width: '28px' }}>{letter})</span>
-                <span>{opt.substring(opt.indexOf(')') + 1).trim() || opt}</span>
+                {isSubmitting ? <Spinner /> : `Submit Assessment (${answeredCount}/${questions.length})`}
               </button>
-            );
-          })}
+            </div>
+          </div>
         </div>
 
-        {/* Footer controls */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px' }}>
-          <button
-            type="button"
-            className="btn-secondary"
-            disabled={currentIdx === 0}
-            onClick={() => setCurrentIdx((prev) => prev - 1)}
-          >
-            ← Previous
-          </button>
+        {/* Right Column: Navigator */}
+        <div className="col">
+          <div className="card">
+            <h3>Question Navigator</h3>
+            <p className="hint">{answeredCount} of {questions.length} answered</p>
+            <div className="q-nav mt16">
+              {questions.map((_, k) => (
+                <button
+                  key={k}
+                  type="button"
+                  className={`${answers[k] !== undefined ? 'ans' : ''} ${k === currentIdx ? 'cur' : ''}`}
+                  onClick={() => setCurrentIdx(k)}
+                >
+                  {k + 1}
+                </button>
+              ))}
+            </div>
+          </div>
 
-          {currentIdx < questions.length - 1 ? (
-            <button
-              type="button"
-              className="btn-primary"
-              style={{ width: 'auto' }}
-              onClick={() => setCurrentIdx((prev) => prev + 1)}
-            >
-              Next →
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="btn-primary"
-              style={{ width: 'auto', backgroundColor: 'var(--color-green)', borderColor: 'var(--color-green)' }}
-              onClick={() => setTestState('confirm')}
-            >
-              Finish & Review →
-            </button>
-          )}
+          <div className="card tip small">
+            Take your time. Questions help ensure you have mastered the core concepts before advancing.
+          </div>
         </div>
       </div>
-
-      {/* Confirmation Modal / Section */}
-      {testState === 'confirm' && (
-        <div className="card" style={{ border: '2px solid var(--color-blue)', backgroundColor: 'var(--color-surface)' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '10px' }}>Submit Formal Assessment</h3>
-          <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)', marginBottom: '14px' }}>
-            Are you sure you want to submit your 10 assessment answers for authoritative evaluation?
-          </p>
-          <div style={{ display: 'flex', gap: '16px', marginBottom: '18px', fontSize: '13px' }}>
-            <span>Answered: <strong>{answeredCount} / {questions.length}</strong></span>
-            <span>Unanswered: <strong>{questions.length - answeredCount}</strong></span>
-          </div>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={() => setTestState('active')}
-              disabled={isSubmitting}
-            >
-              Return to Questions
-            </button>
-            <button
-              type="button"
-              className="btn-primary"
-              style={{ width: 'auto' }}
-              onClick={handleSubmitTest}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Evaluating Assessment...' : 'Confirm & Submit Test'}
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

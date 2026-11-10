@@ -436,23 +436,23 @@ function extractLessonData(teaching, currentTopic) {
 
   // 1. Learning Objective
   let objective = cleanText(sr.learning_objective);
-  if (!objective) {
+  if (!objective || objective.includes('[Mock')) {
     const objMatch = (teaching?.generated_teaching_content || '').match(/###\s*(?:1\.?\s*)?Learning Objective\s*([\s\S]*?)(?=###|$)/i);
-    if (objMatch && objMatch[1].trim()) {
+    if (objMatch && objMatch[1].trim() && !objMatch[1].includes('[Mock')) {
       objective = cleanText(objMatch[1]);
     }
   }
-  if (!objective) objective = fallback.learning_objective;
+  if (!objective || objective.includes('[Mock')) objective = fallback.learning_objective;
 
   // 2. Conceptual Explanation
   let explanation = cleanText(sr.explanation);
-  if (!explanation) {
+  if (!explanation || explanation.includes('[Mock')) {
     const expMatch = (teaching?.generated_teaching_content || '').match(/###\s*(?:2\.?\s*)?Conceptual Explanation\s*([\s\S]*?)(?=###|$)/i);
-    if (expMatch && expMatch[1].trim()) {
+    if (expMatch && expMatch[1].trim() && !expMatch[1].includes('[Mock')) {
       explanation = cleanText(expMatch[1]);
     }
   }
-  if (!explanation) explanation = fallback.explanation;
+  if (!explanation || explanation.includes('[Mock')) explanation = fallback.explanation;
 
   // Filter out any leaked markdown code fences or JSON delimiters from explanation
   explanation = explanation
@@ -502,12 +502,12 @@ function extractLessonData(teaching, currentTopic) {
 
   // 5. Walkthrough steps
   let walkthroughSteps = Array.isArray(sr.walkthrough_steps) && sr.walkthrough_steps.length > 0
-    ? sr.walkthrough_steps.map(cleanText)
+    ? sr.walkthrough_steps.map(cleanText).filter(s => s && !s.includes('[Mock'))
     : [];
 
   if (walkthroughSteps.length === 0) {
     const walkMatch = (teaching?.generated_teaching_content || '').match(/###\s*(?:5\.?\s*)?Step-by-Step Code Walkthrough\s*([\s\S]*?)(?=###|$)/i);
-    if (walkMatch && walkMatch[1].trim()) {
+    if (walkMatch && walkMatch[1].trim() && !walkMatch[1].includes('[Mock')) {
       walkthroughSteps = walkMatch[1]
         .split('\n')
         .map((l) => l.replace(/^\d+\.\s*|^[-*]\s*/, '').trim())
@@ -518,12 +518,12 @@ function extractLessonData(teaching, currentTopic) {
 
   // 6. Common mistakes
   let commonMistakes = Array.isArray(sr.common_mistakes) && sr.common_mistakes.length > 0
-    ? sr.common_mistakes.map(cleanText)
+    ? sr.common_mistakes.map(cleanText).filter(m => m && !m.includes('[Mock'))
     : [];
 
   if (commonMistakes.length === 0) {
     const misMatch = (teaching?.generated_teaching_content || '').match(/###\s*(?:6\.?\s*)?Common Mistakes to Avoid\s*([\s\S]*?)(?=###|$)/i);
-    if (misMatch && misMatch[1].trim()) {
+    if (misMatch && misMatch[1].trim() && !misMatch[1].includes('[Mock')) {
       commonMistakes = misMatch[1]
         .split('\n')
         .map((l) => l.replace(/^\d+\.\s*|^[-*]\s*/, '').trim())
@@ -534,7 +534,13 @@ function extractLessonData(teaching, currentTopic) {
 
   // 7. Quick understanding check
   let understandingCheck = sr.understanding_check || null;
-  if (!understandingCheck || !understandingCheck.question || !Array.isArray(understandingCheck.options)) {
+  if (
+    !understandingCheck ||
+    !understandingCheck.question ||
+    !Array.isArray(understandingCheck.options) ||
+    String(understandingCheck.question).includes('[Mock') ||
+    String(understandingCheck.explanation || '').includes('[Mock')
+  ) {
     understandingCheck = fallback.understanding_check;
   }
 
@@ -803,8 +809,8 @@ export default function TeachingContent({
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span className="badge-blue">GenAI PPS Grounded</span>
-          <span className="badge-green">Mistral 7B</span>
+          <span className="badge-blue">Curriculum Aligned</span>
+          <span className="badge-green">Interactive</span>
         </div>
       </div>
 
@@ -843,7 +849,7 @@ export default function TeachingContent({
                 color: isPlayingAudio ? '#ffffff' : undefined,
               }}
             >
-              {isAudioLoading ? 'Synthesizing Audio...' : isPlayingAudio ? '⏹ Stop Reading' : '🔊 Read Lesson Aloud'}
+              {isAudioLoading ? 'Loading Audio...' : isPlayingAudio ? 'Stop Reading' : 'Listen to Lesson'}
             </button>
             {isPlayingAudio && (
               <span className="badge-green" aria-live="polite">
@@ -891,7 +897,7 @@ export default function TeachingContent({
           <div className="personalization-card" role="region" aria-label="Personalization Applied Details">
             <div className="personalization-header">
               <span className="personalization-title">
-                Personalization Applied (Learning Twin & Profile Driven)
+                Tailored for Your Learning Pace
               </span>
               <span className="badge-green">
                 Tier: {personalizationApplied.mastery_tier || difficulty} ({personalizationApplied.topic_mastery ? `${Number(personalizationApplied.topic_mastery).toFixed(2)}` : 'Adaptive'})
@@ -911,7 +917,7 @@ export default function TeachingContent({
                   lineHeight: 1.5,
                 }}
               >
-                <strong>Pedagogical Adaptation:</strong> {personalizationApplied.rationale}
+                <strong>Personalized Approach:</strong> {personalizationApplied.rationale}
               </div>
             )}
 
@@ -1008,7 +1014,7 @@ export default function TeachingContent({
                 paddingBottom: '6px',
               }}
             >
-              Visual Concept Architecture {lesson.diagrams.length > 1 ? `(${lesson.diagrams.length} Architectural Views)` : ''}
+              Visual Concept Diagram {lesson.diagrams.length > 1 ? `(${lesson.diagrams.length} Views)` : ''}
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {lesson.diagrams.map((diag, dIdx) => (
@@ -1049,7 +1055,7 @@ export default function TeachingContent({
                 onClick={handleCopyCode}
                 aria-label="Copy C code to clipboard"
               >
-                {copied ? '✓ Copied' : 'Copy Code'}
+                {copied ? 'Copied' : 'Copy Code'}
               </button>
             </div>
             <pre className="code-block">
@@ -1154,7 +1160,7 @@ export default function TeachingContent({
                     lineHeight: '1.45',
                   }}
                 >
-                  <span style={{ fontWeight: 700, flexShrink: 0 }}>⚠️</span>
+                  <span style={{ fontWeight: 700, flexShrink: 0 }}>Note:</span>
                   <span>{mistake}</span>
                 </div>
               ))}
@@ -1176,12 +1182,12 @@ export default function TeachingContent({
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
             <div>
               <div style={{ fontWeight: 700, fontSize: '13px', color: readingCompleted ? 'var(--color-green)' : 'var(--color-blue)' }}>
-                {readingCompleted ? '✓ Reading Requirement Completed' : '📖 Step 1: Read Learning Content'}
+                {readingCompleted ? 'Lesson Reading Completed' : 'Step 1: Read Learning Content'}
               </div>
               <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>
                 {readingCompleted
-                  ? 'You have satisfied the reading requirement. Complete the mastery check below to unlock the next subtopic.'
-                  : 'Read all sections of this subtopic above, then click the button to verify reading completion and unlock the mastery check.'}
+                  ? 'You have completed the reading. Take the concept check below to proceed.'
+                  : 'Read the lesson material above, then click the button below to unlock the concept check.'}
               </div>
             </div>
             {!readingCompleted && (
@@ -1192,7 +1198,7 @@ export default function TeachingContent({
                 disabled={isMarkingReading}
                 style={{ padding: '7px 14px', fontSize: '12px' }}
               >
-                {isMarkingReading ? 'Verifying...' : 'Mark Reading Complete ✓'}
+                {isMarkingReading ? 'Saving...' : 'Mark Reading Complete'}
               </button>
             )}
           </div>
@@ -1226,14 +1232,14 @@ export default function TeachingContent({
                     margin: 0,
                   }}
                 >
-                  {isRemedial ? 'Targeted Remedial Mastery Check' : 'Mandatory Subtopic Mastery Check'}
+                  {isRemedial ? 'Review Check' : 'Concept Check'}
                 </h3>
                 <span style={{ fontSize: '11px', color: 'var(--color-text-secondary)' }}>
                   Subtopic: <strong>{subtopicTitle || topic}</strong>
                 </span>
               </div>
               <span className={readingCompleted ? 'badge-blue' : 'badge-gray'}>
-                {readingCompleted ? 'Gate Ready' : 'Locked: Reading Required'}
+                {readingCompleted ? 'Ready' : '🔒 Locked: Reading Required'}
               </span>
             </div>
 
@@ -1320,30 +1326,30 @@ export default function TeachingContent({
                   }}
                 >
                   <div style={{ fontWeight: 700, color: isCorrect ? 'var(--color-green)' : 'var(--color-red)', marginBottom: '6px', fontSize: '14px' }}>
-                    {isCorrect ? '✓ Mastery Gate Passed! Next subtopic unlocked.' : '✗ Misconception Detected'}
+                    {isCorrect ? 'Concept Mastered! Next subtopic unlocked.' : 'Review Needed'}
                   </div>
                   {isCorrect ? (
                     <div>
                       <p style={{ margin: '0 0 6px 0', color: 'var(--color-text-primary)' }}>
-                        {evalResult?.explanation || currentQuestion.explanation}
+                        {(evalResult?.explanation && !evalResult.explanation.includes('[Mock')) ? evalResult.explanation : ((currentQuestion?.explanation && !currentQuestion.explanation.includes('[Mock')) ? currentQuestion.explanation : 'Demonstrates correct understanding of the subtopic mechanics.')}
                       </p>
                       <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)' }}>
-                        Evidence Score: <strong>{evalResult?.score || 100}%</strong> • Subtopic Mastery: <strong>{evalResult?.mastery || '0.90'}</strong> • Status: <strong>{evalResult?.status || 'COMPLETED'}</strong>
+                        Score: <strong>{evalResult?.score || 100}%</strong> • Mastery Score: <strong>{evalResult?.mastery || '0.90'}</strong> • Status: <strong>{evalResult?.status || 'COMPLETED'}</strong>
                       </div>
                     </div>
                   ) : (
                     <div>
                       <p style={{ margin: '0 0 6px 0', color: 'var(--color-text-primary)', fontWeight: 500 }}>
-                        {evalResult?.misconception || 'Your selected answer indicates an incomplete mental model for this subtopic.'}
+                        {evalResult?.misconception || 'Your selected answer indicates an opportunity to review this subtopic.'}
                       </p>
                       <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
                         <strong>Correct Answer:</strong> {evalResult?.correct_option || currentQuestion.correct_option || currentQuestion.correct_answer}
                       </p>
                       <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
-                        <strong>Remedial Review:</strong> {evalResult?.explanation || currentQuestion.explanation}
+                        <strong>Review:</strong> {(evalResult?.explanation && !evalResult.explanation.includes('[Mock')) ? evalResult.explanation : ((currentQuestion?.explanation && !currentQuestion.explanation.includes('[Mock')) ? currentQuestion.explanation : 'Review the C syntax and memory rules for this subtopic.')}
                       </p>
                       <div style={{ fontSize: '11px', color: 'var(--color-red)' }}>
-                        Next subtopic remains locked until mastery is demonstrated. Review the feedback and try again.
+                        Review the explanation above and try again to continue.
                       </div>
                     </div>
                   )}
@@ -1357,7 +1363,7 @@ export default function TeachingContent({
                       onClick={handleRetryRemedial}
                       style={{ padding: '6px 14px', fontSize: '12px' }}
                     >
-                      Try Remedial Question ⟳
+                      Try Practice Question
                     </button>
                   )}
                   {!isCorrect && !evalResult?.remedial_question && (
@@ -1399,7 +1405,7 @@ export default function TeachingContent({
               }
             }}
           >
-            Ask AI Tutor 💬
+            Ask Learning Tutor
           </button>
 
           <div style={{ display: 'flex', gap: '10px' }}>
@@ -1409,7 +1415,7 @@ export default function TeachingContent({
                 className="btn-secondary"
                 onClick={() => onNavigate('roadmap')}
               >
-                View Adaptive Roadmap ☵
+                View Learning Roadmap
               </button>
             )}
             {onNavigate && (

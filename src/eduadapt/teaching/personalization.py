@@ -288,7 +288,12 @@ class PersonalizationEngine:
             normalized_pace = "moderate"
 
         # 4. Learning style & difficulties
-        learning_style = student_profile.learning_style or "balanced"
+        learning_style = (
+            raw_state.get("explanation_style")
+            or raw_state.get("preferred_explanation_style")
+            or student_profile.learning_style
+            or "balanced"
+        )
         recommended_difficulty = str(
             raw_state.get("recommended_difficulty") or ("Easy" if mastery_tier == "Beginner" else ("Hard" if mastery_tier == "Advanced" else "Medium"))
         )

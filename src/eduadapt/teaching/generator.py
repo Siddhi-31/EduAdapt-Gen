@@ -108,6 +108,14 @@ class PersonalizedContentGenerator:
         if p_context.remediation_focus:
             tier_instruction += f"\nTargeted Remediation Directive: Focus specifically on resolving: {p_context.remediation_focus}."
 
+        style_key = str(p_context.preferred_learning_style).lower()
+        if "simple" in style_key or "visual" in style_key:
+            tier_instruction += "\nExplanation Style Directive (Simple & Visual): Use short conversational sentences, visual physical analogies, clean step breakdowns, and keep code minimal and clear."
+        elif "step" in style_key:
+            tier_instruction += "\nExplanation Style Directive (Step by Step): Present ideas as numbered, logical micro-steps with clear state checks before proceeding to the next."
+        elif "detailed" in style_key or "technical" in style_key:
+            tier_instruction += "\nExplanation Style Directive (Detailed & Technical): Provide rigorous technical depth, memory models, underlying compiler/machine mechanics, standard specifications, and boundary edge cases."
+
         # 2. Retrieve curriculum context via RAG if available
         context_str = additional_context
         retrieved_count = 0
@@ -236,8 +244,13 @@ class PersonalizedContentGenerator:
         })
 
         # Return updated GenerationResult
+        clean_content = (
+            parsed_response.explanation
+            if (not gen_result.content or "[Mock" in gen_result.content)
+            else gen_result.content
+        )
         return GenerationResult(
-            content=gen_result.content,
+            content=clean_content,
             model_name=gen_result.model_name,
             prompt_tokens=gen_result.prompt_tokens,
             completion_tokens=gen_result.completion_tokens,

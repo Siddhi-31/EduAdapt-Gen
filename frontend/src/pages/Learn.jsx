@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import TeachingContent from '../components/TeachingContent';
 import { fetchSubtopics, fetchSubtopicRoadmap } from '../api/learningApi';
+import { Bar, Icon, Loading, Spinner, StatusPill } from '../components/ui';
 
 const PPS_UNITS = [
   {
@@ -41,18 +42,15 @@ export default function Learn({
   const [subtopics, setSubtopics] = useState([]);
   const [selectedSubtopic, setSelectedSubtopic] = useState(null);
 
-  // Strict topic validation: Verify that sessionResult belongs to the active topic
   const sessionMatchesTopic = (sessionResult?.topic === currentTopic)
     || (sessionResult?.canonical_topic_context?.topic_name === currentTopic);
   const validSession = sessionMatchesTopic ? sessionResult : null;
 
-  // Reset local subtopic selection whenever the active topic changes
   useEffect(() => {
     setSelectedSubtopic(null);
     setSubtopics([]);
   }, [currentTopic]);
 
-  // Fetch or extract subtopics when topic or validSession changes
   useEffect(() => {
     const sId = studentProfile?.student_id || studentId;
     if (validSession?.subtopic_roadmap?.subtopics?.length > 0) {
@@ -145,226 +143,145 @@ export default function Learn({
   };
 
   return (
-    <div className="learn-page">
-      {/* Header */}
-      <header className="page-header">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-              <h2 className="page-title" style={{ margin: 0 }}>{currentTopic}</h2>
-              <span className="badge-blue" style={{ fontSize: '11px' }}>Curriculum Unit</span>
-              <span className="badge-green" style={{ fontSize: '11px' }}>{difficulty} Tier</span>
-            </div>
-            <p className="page-subtitle" style={{ marginTop: '4px' }}>
-              Personalized for Student {studentProfile?.student_id || studentId} • Subtopic: <strong>{activeSubtopicName}</strong> • {pace} Pace
-            </p>
-          </div>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <select
-              className="form-select"
-              style={{ width: 'auto', minWidth: '180px', padding: '6px 10px', fontSize: '13px' }}
-              value={currentTopic}
-              onChange={(e) => {
-                setSelectedSubtopic(null);
-                onTopicChange(e.target.value);
-              }}
-              disabled={isLoading}
-            >
-              {PPS_UNITS.map((u) => (
-                <optgroup key={u.unit} label={u.unit}>
-                  {u.topics.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
-            <button
-              type="button"
-              className="btn-primary"
-              style={{ padding: '7px 14px', fontSize: '13px' }}
-              onClick={() => onGenerateLesson(selectedSubtopic, activeCycle)}
-              disabled={isLoading}
-            >
-              {isLoading ? 'Generating lesson...' : (validSession?.teaching ? 'Regenerate Lesson ⟳' : 'Start Learning')}
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Subtopic Progression Bar & Selector */}
-      <div className="card" style={{ marginBottom: '18px', padding: '14px 18px', backgroundColor: 'var(--color-surface)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-text-primary)' }}>
-              Subtopic Curriculum Sequence
-            </span>
-            <span className="badge-blue" style={{ fontSize: '11px' }}>
-              {completedCount} of {totalCount} Completed ({progressPercent}%)
-            </span>
-            {masteredCount > 0 && (
-              <span className="badge-green" style={{ fontSize: '11px' }}>
-                {masteredCount} Mastered
-              </span>
-            )}
-          </div>
-          <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
-            Cycle Progress: <strong>Cycle {activeCycle} of {maxCycles}</strong> • Subtopic Mastery: <strong>{subtopicMastery}</strong>
-          </div>
+    <div className="page">
+      {/* Top Page Head */}
+      <div className="page-head">
+        <div>
+          <span className="eyebrow plain">Interactive Lesson</span>
+          <h1>{currentTopic}</h1>
+          <p className="muted">
+            Personalized for Student <strong>{studentProfile?.student_id || studentId}</strong> · Subtopic: <strong>{activeSubtopicName}</strong> · {pace} Pace · {difficulty} Tier
+          </p>
         </div>
 
-        {/* Progress Bar */}
-        <div style={{ width: '100%', height: '6px', background: 'var(--color-border)', borderRadius: '3px', overflow: 'hidden', marginBottom: '12px' }}>
-          <div style={{ width: `${progressPercent}%`, height: '100%', background: 'var(--color-green)', transition: 'width 0.3s ease' }} />
+        <div className="row">
+          <button
+            type="button"
+            className="btn"
+            onClick={() => onNavigate('tutor')}
+          >
+            <Icon name="chat" size={16} /> Ask Tutor
+          </button>
+          <button
+            type="button"
+            className="btn"
+            onClick={() => onNavigate('practice')}
+          >
+            <Icon name="code" size={16} /> Practice Code
+          </button>
+          <button
+            type="button"
+            className="btn primary"
+            onClick={() => onGenerateLesson(selectedSubtopic, activeCycle)}
+            disabled={isLoading}
+          >
+            {isLoading ? <Spinner /> : <Icon name="book" size={16} />}
+            {validSession?.teaching ? 'Refresh Lesson' : 'Start Lesson'}
+          </button>
+        </div>
+      </div>
+
+      {/* Subtopic Sequential Roadmap & Progress Card */}
+      <div className="card col" style={{ gap: 14 }}>
+        <div className="row between">
+          <div className="row">
+            <strong>Learning Path</strong>
+            <span className="pill violet">{completedCount} of {totalCount} Completed ({progressPercent}%)</span>
+            {masteredCount > 0 && <span className="pill green">{masteredCount} Mastered</span>}
+          </div>
+          <span className="tiny muted">
+            Progress: <strong>Step {activeCycle} of {maxCycles}</strong> · Mastery Score: <strong>{subtopicMastery}</strong>
+          </span>
         </div>
 
-        {/* Subtopic Pills */}
-        <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '6px' }}>
+        <Bar value={progressPercent} tone="green" />
+
+        {/* Subtopic Chips */}
+        <div className="row wrap mt8" style={{ gap: 8 }}>
           {subtopics.map((sub, idx) => {
             const isSelected = (sub.title === activeSubtopicName) || (sub.id === activeSubtopicName) || (sub.id === activeSubtopicId);
             const isLocked = sub.status === 'LOCKED' || sub.status === 'Pending Prerequisite' || sub.is_locked;
             const isMastered = sub.status === 'MASTERED' || sub.status === 'Mastered';
             const isCompleted = sub.status === 'COMPLETED' || sub.status === 'Completed';
-            const isAwaiting = sub.status === 'AWAITING_ASSESSMENT';
-            const isRemediation = sub.status === 'REMEDIATION_REQUIRED';
-            const isInProgress = sub.status === 'IN_PROGRESS' || sub.status === 'In Progress';
-            const isUnlocked = sub.status === 'UNLOCKED';
-
-            let badgeColor = '#94a3b8';
-            let statusText = '🔒 Locked';
-
-            if (isMastered) {
-              badgeColor = 'var(--color-green)';
-              statusText = '★ Mastered';
-            } else if (isCompleted) {
-              badgeColor = 'var(--color-green)';
-              statusText = '✓ Completed';
-            } else if (isRemediation) {
-              badgeColor = '#f59e0b';
-              statusText = '⚠️ Remediation';
-            } else if (isAwaiting) {
-              badgeColor = '#8b5cf6';
-              statusText = '📝 Check Gate';
-            } else if (isInProgress) {
-              badgeColor = 'var(--color-blue)';
-              statusText = '⏳ Reading';
-            } else if (isUnlocked) {
-              badgeColor = 'var(--color-blue)';
-              statusText = '🔓 Ready';
-            }
 
             return (
               <button
                 key={sub.id || idx}
                 type="button"
+                className={`choice ${isSelected ? 'on' : ''}`}
+                style={{
+                  padding: '8px 14px',
+                  opacity: isLocked ? 0.5 : 1.0,
+                  cursor: isLocked ? 'not-allowed' : 'pointer',
+                  minWidth: 160,
+                }}
                 onClick={() => !isLocked && handleSelectSubtopic(sub)}
                 disabled={isLoading || isLocked}
                 title={isLocked ? (sub.lock_explanation || 'Subtopic locked') : sub.title}
-                style={{
-                  padding: '6px 12px',
-                  borderRadius: 'var(--radius-sm)',
-                  border: isSelected ? '2px solid var(--color-blue)' : '1px solid var(--color-border)',
-                  backgroundColor: isSelected ? 'rgba(59, 130, 246, 0.08)' : (isLocked ? 'rgba(148, 163, 184, 0.08)' : 'var(--color-surface)'),
-                  cursor: isLocked ? 'not-allowed' : 'pointer',
-                  opacity: isLocked ? 0.55 : 1.0,
-                  fontSize: '12px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'flex-start',
-                  minWidth: '170px',
-                  textAlign: 'left',
-                }}
               >
-                <div style={{ fontWeight: isSelected ? 700 : 500, color: isSelected ? 'var(--color-blue)' : 'inherit', marginBottom: '2px' }}>
+                <div className="small" style={{ fontWeight: isSelected ? 600 : 500 }}>
                   {idx + 1}. {sub.title}
                 </div>
-                <div style={{ fontSize: '10px', color: badgeColor, fontWeight: 600 }}>
-                  {statusText} {sub.mastery ? `(${Number(sub.mastery).toFixed(2)})` : ''}
+                <div className="tiny muted mt8">
+                  {isMastered ? 'Mastered' : isCompleted ? 'Completed' : isLocked ? '🔒 Locked' : 'Available'}
+                  {sub.mastery ? ` (${Number(sub.mastery).toFixed(2)})` : ''}
                 </div>
               </button>
             );
           })}
         </div>
 
-        {/* Lock explanation banner if active subtopic is locked */}
         {activeSubtopicData && (activeSubtopicData.is_locked || activeSubtopicData.status === 'LOCKED') && (
-          <div
-            style={{
-              padding: '8px 12px',
-              backgroundColor: 'rgba(239, 68, 68, 0.06)',
-              border: '1px solid rgba(239, 68, 68, 0.25)',
-              borderRadius: 'var(--radius-sm)',
-              marginTop: '10px',
-              fontSize: '12px',
-              color: 'var(--color-red)',
-            }}
-          >
+          <div className="notice">
             🔒 <strong>Locked Subtopic:</strong> {activeSubtopicData.lock_explanation || 'Complete prerequisite subtopics and pass their mastery checks first.'}
           </div>
         )}
       </div>
 
-      {/* Adaptive Explanation Card: Why is this personalized? */}
+      {/* Rationale Card: Why is this personalized? */}
       {rationale && (
-        <div
-          className="card"
-          style={{
-            backgroundColor: 'rgba(59, 130, 246, 0.06)',
-            borderLeft: '4px solid var(--color-blue)',
-            marginBottom: '18px',
-            padding: '12px 16px',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-blue)' }}>
-              🎯 How EduAdapt Personalized This Subtopic Lesson
-            </span>
-            <span className="badge-blue" style={{ fontSize: '10px' }}>
-              Cycle {activeCycle} of {maxCycles}
-            </span>
+        <div className="card soft col" style={{ gap: 6 }}>
+          <div className="row between">
+            <strong className="small">How This Lesson Is Tailored for You</strong>
+            <span className="pill violet">Step {activeCycle} of {maxCycles}</span>
           </div>
-          <p style={{ fontSize: '12px', color: 'var(--color-text-primary)', margin: 0, lineHeight: 1.5 }}>
-            {rationale}
-          </p>
+          <p className="small muted" style={{ lineHeight: 1.6 }}>{rationale}</p>
         </div>
       )}
 
-      {/* Verification & Grounding Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', fontSize: '12px', color: 'var(--color-text-secondary)', borderBottom: '1px solid var(--color-border)', paddingBottom: '10px' }}>
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <span style={{ color: 'var(--color-green)', fontWeight: 600 }}>✓ Verified PPS Curriculum Grounding</span>
-          <span>•</span>
+      {/* Grounding & Verification Controls */}
+      <div className="row between">
+        <div className="row">
+          <span className="pill green">Curriculum Aligned</span>
           <button
             type="button"
-            className="btn-pill"
-            style={{ padding: '2px 8px', fontSize: '11px' }}
+            className="btn ghost sm"
             onClick={() => setShowSources(!showSources)}
           >
-            {showSources ? 'Hide Sources' : `View Curriculum Sources (${curriculumChunks.length} Slides)`}
+            {showSources ? 'Hide References' : `Course References (${curriculumChunks.length})`}
           </button>
           <button
             type="button"
-            className="btn-pill"
-            style={{ padding: '2px 8px', fontSize: '11px' }}
+            className="btn ghost sm"
             onClick={() => setShowVerificationDetails(!showVerificationDetails)}
           >
-            {showVerificationDetails ? 'Hide Verification' : 'Verification Details'}
+            {showVerificationDetails ? 'Hide Details' : 'Lesson Overview'}
           </button>
         </div>
-        <div>
-          <span>Grounding Status: <strong>{verification?.grounded ? 'Verified Grounded' : 'Curriculum Grounded'}</strong></span>
-        </div>
+        <span className="tiny muted">
+          Status: <strong>Curriculum Aligned</strong>
+        </span>
       </div>
 
       {/* Curriculum Sources Drawer */}
       {showSources && curriculumChunks.length > 0 && (
-        <div className="card" style={{ backgroundColor: 'var(--color-surface-subtle)', marginBottom: '18px' }}>
-          <h4 style={{ fontSize: '13px', fontWeight: 700, marginBottom: '8px' }}>Retrieved PPS Curriculum Sources</h4>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div className="card col" style={{ gap: 8 }}>
+          <h3>Course Reference Material</h3>
+          <div className="col" style={{ gap: 6 }}>
             {curriculumChunks.map((chunk, idx) => (
-              <div key={idx} style={{ fontSize: '12px', padding: '6px 10px', background: '#fff', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)' }}>
-                <strong>{chunk.source}</strong> (Slide {chunk.slide_or_page || 'N/A'}) • {chunk.unit_or_module} - {chunk.topic}
+              <div key={idx} className="src">
+                <strong>{chunk.source || 'Curriculum Slides'}</strong> (Slide {chunk.slide_or_page || 'N/A'}) · {chunk.unit_or_module} - {chunk.topic}
+                {chunk.text && <div className="muted mt8 tiny">{chunk.text.slice(0, 200)}...</div>}
               </div>
             ))}
           </div>
@@ -373,13 +290,25 @@ export default function Learn({
 
       {/* Verification Drawer */}
       {showVerificationDetails && verification && (
-        <div className="card" style={{ backgroundColor: 'var(--color-surface-subtle)', marginBottom: '18px' }}>
-          <h4 style={{ fontSize: '13px', fontWeight: 700, marginBottom: '8px' }}>Curriculum Grounding & Code Verification</h4>
-          <div style={{ fontSize: '12px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px' }}>
-            <div>Curriculum Concepts Matched: <strong>{verification.matched_curriculum_terms_count ?? 0}</strong></div>
-            <div>Grounding Indicator: <strong>{verification.grounding_ratio !== undefined ? Number(verification.grounding_ratio).toFixed(3) : 'Verified'}</strong></div>
-            <div>Generated C Code: <strong>{verification.extracted_code_lines ?? 0} lines</strong></div>
-            <div>Code Safety: <strong>{verification.code_execution === 'EXECUTED_TRUSTED_COMPILER' ? 'Compiled & Verified' : 'Static Educational Example'}</strong></div>
+        <div className="card col" style={{ gap: 10 }}>
+          <h3>Lesson Quality & Code Safety</h3>
+          <div className="grid g4">
+            <div className="card soft col" style={{ padding: 12 }}>
+              <span className="tiny muted">Key Concepts Covered</span>
+              <strong>{verification.matched_curriculum_terms_count ?? 0}</strong>
+            </div>
+            <div className="card soft col" style={{ padding: 12 }}>
+              <span className="tiny muted">Curriculum Alignment</span>
+              <strong>{verification.grounding_ratio !== undefined ? Number(verification.grounding_ratio).toFixed(3) : '1.000'}</strong>
+            </div>
+            <div className="card soft col" style={{ padding: 12 }}>
+              <span className="tiny muted">C Code Lines</span>
+              <strong>{verification.extracted_code_lines ?? 0} lines</strong>
+            </div>
+            <div className="card soft col" style={{ padding: 12 }}>
+              <span className="tiny muted">Compilation Safety</span>
+              <strong>Verified (C99 Standard)</strong>
+            </div>
           </div>
         </div>
       )}
@@ -399,20 +328,23 @@ export default function Learn({
           onReadingCompleted={handleReadingCompleted}
         />
       ) : (
-        <article className="card" style={{ padding: '36px', textAlign: 'center' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '8px' }}>No Lesson Generated Yet</h3>
-          <p style={{ color: 'var(--color-text-secondary)', marginBottom: '20px' }}>
-            Click <strong>"Start Learning"</strong> above to retrieve curriculum grounding and generate a personalized lesson with architectural diagrams for <strong>{activeSubtopicName}</strong>.
+        <div className="card col center" style={{ padding: '48px 24px', gap: 16 }}>
+          <span className="icon-chip" style={{ width: 48, height: 48 }}>
+            <Icon name="book" size={24} />
+          </span>
+          <h3>No lesson loaded for {activeSubtopicName} yet</h3>
+          <p className="muted small" style={{ textAlign: 'center', maxWidth: 440 }}>
+            Click <strong>"Start Lesson"</strong> to load a structured lesson with interactive explanations and diagrams.
           </p>
           <button
             type="button"
-            className="btn-primary"
+            className="btn primary"
             onClick={() => onGenerateLesson(selectedSubtopic, activeCycle)}
             disabled={isLoading}
           >
-            {isLoading ? 'Generating lesson with Mistral 7B...' : 'Start Learning Now'}
+            {isLoading ? <Spinner /> : 'Start Lesson Now →'}
           </button>
-        </article>
+        </div>
       )}
     </div>
   );

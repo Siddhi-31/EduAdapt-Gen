@@ -1,194 +1,257 @@
 import React, { useEffect, useState } from 'react';
-import { fetchStudentsList, fetchStudentProfile } from '../api/learningApi';
+import { updateStudentProfile } from '../api/learningApi';
+import { Bar, Icon, Loading, Spinner, StatusPill } from '../components/ui';
 
 export default function ProfilePage({
   currentStudentId = 'S001',
   studentProfile,
-  onSelectStudent,
   onNavigate,
 }) {
-  const [students, setStudents] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedDetails, setSelectedDetails] = useState(studentProfile);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState(null);
+  const [errorMessage, setErrorMessage] = useState(null);
+
+  const isDiagComplete = Boolean(studentProfile?.has_completed_diagnostic);
+
+  const [formData, setFormData] = useState({
+    full_name: studentProfile?.full_name || '',
+    college: studentProfile?.college || '',
+    department: studentProfile?.department || '',
+  });
 
   useEffect(() => {
-    fetchStudentsList()
-      .then((data) => {
-        if (data && data.students) {
-          setStudents(data.students);
-        }
-      })
-      .catch((err) => console.warn('Failed to load students list:', err));
-  }, []);
+    if (studentProfile) {
+      setFormData({
+        full_name: studentProfile.full_name || '',
+        college: studentProfile.college || '',
+        department: studentProfile.department || '',
+      });
+    }
+  }, [studentProfile]);
 
-  const handleStudentClick = async (sId) => {
-    setIsLoading(true);
+  const handleSave = async (e) => {
+    if (e) e.preventDefault();
+    setIsSaving(true);
+    setSaveMessage(null);
+    setErrorMessage(null);
     try {
-      const prof = await fetchStudentProfile(sId);
-      setSelectedDetails(prof);
-      if (onSelectStudent) {
-        onSelectStudent(sId, prof);
-      }
+      await updateStudentProfile(formData);
+      setSaveMessage('Profile information saved successfully.');
+      setIsEditing(false);
+      setTimeout(() => setSaveMessage(null), 3500);
     } catch (err) {
-      alert('Unable to load student profile: ' + err.message);
+      setErrorMessage('Failed to save profile: ' + (err.message || 'Please try again.'));
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
   };
 
-  const mastery = selectedDetails?.mastery !== undefined
-    ? `${Math.round(selectedDetails.mastery * 100)}%`
-    : '0%';
-  const accuracy = selectedDetails?.accuracy !== undefined
-    ? `${Math.round(selectedDetails.accuracy * 100)}%`
-    : '0%';
-  const pace = selectedDetails?.learning_pace || 'Moderate';
-  const difficulty = selectedDetails?.recommended_difficulty || 'Beginner';
-  const predictedMastery = selectedDetails?.predicted_mastery_level || 'New Learner';
+  const masteryVal = isDiagComplete && studentProfile?.mastery !== undefined ? Math.round(studentProfile.mastery * 100) : 0;
+  const accuracyVal = isDiagComplete && studentProfile?.accuracy !== undefined ? Math.round(studentProfile.accuracy * 100) : 0;
+  const pace = isDiagComplete ? (studentProfile?.learning_pace || 'Moderate') : 'Not determined';
+  const difficulty = isDiagComplete ? (studentProfile?.recommended_difficulty || 'Beginner') : 'Not determined';
+  const testsCount = isDiagComplete ? (studentProfile?.tests_completed || 0) : 0;
+  const studentName = studentProfile?.full_name || 'Student';
 
   return (
-    <div className="profile-page">
-      <header className="page-header">
-        <h2 className="page-title">Student Profile & Learning Twin</h2>
-        <p className="page-subtitle">
-          Real student cognitive models driving deterministic GenAI personalization across 15 pedagogical dimensions.
-        </p>
-      </header>
+    <div className="page" style={{ maxWidth: 920, margin: '0 auto', gap: 20 }}>
+      <div className="page-head">
+        <div>
+          <span className="eyebrow plain">Student Identity</span>
+          <h1>{studentName}</h1>
+          <p className="muted">
+            {formData.college ? `${formData.college} · ` : ''}
+            {formData.department ? `${formData.department} · ` : ''}
+            Student ID: <strong>{currentStudentId}</strong>
+          </p>
+        </div>
+        <div className="row">
+          <span className={`pill ${isDiagComplete ? 'green' : 'amber'}`}>
+            {isDiagComplete ? 'Diagnostic Completed' : 'Diagnostic Pending'}
+          </span>
+          <span className="pill violet">{difficulty} Tier</span>
+        </div>
+      </div>
 
-      {/* Panel Demonstration Student Switcher */}
-      <div className="card" style={{ borderColor: 'var(--color-blue-border)', backgroundColor: 'var(--color-blue-light)', marginBottom: '24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <div>
-            <span className="badge-blue">Panel Demonstration Control</span>
-            <h3 style={{ fontSize: '16px', fontWeight: 700, margin: '6px 0 2px' }}>
-              Select Active Real Student Profile
-            </h3>
-            <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', margin: 0 }}>
-              Switching students instantly reconfigures the non-agentic GenAI pipeline for different mastery tiers.
+      {saveMessage && <div className="pill green" style={{ alignSelf: 'flex-start' }}>{saveMessage}</div>}
+      {errorMessage && <div className="notice" role="alert">{errorMessage}</div>}
+
+      {/* Profile Overview Card */}
+      <div className="card col" style={{ gap: 16 }}>
+        <div className="row between">
+          <h3>Academic Information</h3>
+          {!isEditing ? (
+            <button
+              type="button"
+              className="btn sm"
+              onClick={() => setIsEditing(true)}
+            >
+              <Icon name="gear" size={14} /> Edit Information
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="btn sm ghost"
+              onClick={() => setIsEditing(false)}
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+
+        {!isEditing ? (
+          <div className="grid g3">
+            <div className="card soft col" style={{ padding: 14 }}>
+              <span className="tiny muted">Full Name</span>
+              <strong className="mt4">{studentName}</strong>
+            </div>
+            <div className="card soft col" style={{ padding: 14 }}>
+              <span className="tiny muted">College / Institution</span>
+              <strong className="mt4">{formData.college || 'Not specified'}</strong>
+            </div>
+            <div className="card soft col" style={{ padding: 14 }}>
+              <span className="tiny muted">Department / Major</span>
+              <strong className="mt4">{formData.department || 'Not specified'}</strong>
+            </div>
+          </div>
+        ) : (
+          <form className="col" style={{ gap: 14 }} onSubmit={handleSave}>
+            <div className="grid g3">
+              <label className="col" style={{ gap: 6 }}>
+                <span className="small muted">Full Name</span>
+                <input
+                  type="text"
+                  className="input"
+                  value={formData.full_name}
+                  onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                  required
+                />
+              </label>
+              <label className="col" style={{ gap: 6 }}>
+                <span className="small muted">College</span>
+                <input
+                  type="text"
+                  className="input"
+                  value={formData.college}
+                  onChange={(e) => setFormData({ ...formData, college: e.target.value })}
+                />
+              </label>
+              <label className="col" style={{ gap: 6 }}>
+                <span className="small muted">Department</span>
+                <input
+                  type="text"
+                  className="input"
+                  value={formData.department}
+                  onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                />
+              </label>
+            </div>
+            <div className="row end mt8">
+              <button
+                type="submit"
+                className="btn primary sm"
+                disabled={isSaving}
+              >
+                {isSaving ? <Spinner /> : 'Save Profile Changes'}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+
+      {/* Diagnostic & Mastery Metrics */}
+      <div className="grid g4">
+        <div className="card stat">
+          <span className="muted small">Topic Mastery</span>
+          <div className="num">{masteryVal}%</div>
+          <div className="mt8">
+            <Bar value={masteryVal} />
+          </div>
+          <span className="tiny muted mt8">Earned from practice</span>
+        </div>
+        <div className="card stat">
+          <span className="muted small">Practice Accuracy</span>
+          <div className="num">{accuracyVal}%</div>
+          <div className="mt8">
+            <Bar value={accuracyVal} tone="green" />
+          </div>
+          <span className="tiny muted mt8">Across verified attempts</span>
+        </div>
+        <div className="card stat">
+          <span className="muted small">Learning Level</span>
+          <div className="num" style={{ fontSize: '1.4em' }}>{difficulty}</div>
+          <span className="tiny muted mt8">
+            {isDiagComplete ? 'Calibrated from diagnostic' : 'Pending diagnostic'}
+          </span>
+        </div>
+        <div className="card stat">
+          <span className="muted small">Assessments Completed</span>
+          <div className="num">{testsCount}</div>
+          <span className="tiny muted mt8">Verified tests</span>
+        </div>
+      </div>
+
+      {/* Personalization Parameters */}
+      <div className="card col" style={{ gap: 14 }}>
+        <h3>Active Personalization Parameters</h3>
+        <p className="hint">
+          Parameters aligned with your diagnostic performance, learning pace, and preferences.
+        </p>
+
+        <div className="grid g2 mt8">
+          <div className="card soft col" style={{ padding: 14, gap: 6 }}>
+            <span className="tiny muted">Initial Diagnostic Status</span>
+            <strong>{isDiagComplete ? 'Completed & Verified' : 'Action Required'}</strong>
+            <p className="tiny muted">
+              {isDiagComplete
+                ? 'Your baseline reasoning, numerical, and verbal skills have been recorded.'
+                : 'You must complete the diagnostic assessment to unlock personalized recommendations.'}
+            </p>
+            {!isDiagComplete && (
+              <button
+                type="button"
+                className="btn sm primary mt8"
+                style={{ alignSelf: 'flex-start' }}
+                onClick={() => onNavigate('diagnostic')}
+              >
+                Start Diagnostic Now →
+              </button>
+            )}
+          </div>
+
+          <div className="card soft col" style={{ padding: 14, gap: 6 }}>
+            <span className="tiny muted">Learning Pace Optimization</span>
+            <strong>{pace} Pace</strong>
+            <p className="tiny muted">
+              {isDiagComplete
+                ? 'Adjusts lesson detail and scaffolding based on response velocity.'
+                : 'Calibrated automatically after the diagnostic assessment.'}
+            </p>
+          </div>
+
+          <div className="card soft col" style={{ padding: 14, gap: 6 }}>
+            <span className="tiny muted">Curriculum Course</span>
+            <strong>Programming for Problem Solving (PPS C99)</strong>
+            <p className="tiny muted">Structured university curriculum across 5 units and 10 topics.</p>
+          </div>
+
+          <div className="card soft col" style={{ padding: 14, gap: 6 }}>
+            <span className="tiny muted">Explanation Style Preference</span>
+            <strong>{studentProfile?.explanation_style || 'Step by Step'}</strong>
+            <p className="tiny muted">
+              Can be customized anytime in{' '}
+              <button
+                type="button"
+                className="btn ghost sm"
+                style={{ padding: '0 4px', textDecoration: 'underline' }}
+                onClick={() => onNavigate('settings')}
+              >
+                Accessibility & Learning Style
+              </button>
             </p>
           </div>
         </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '10px' }}>
-          {students.map((st) => {
-            const isSelected = st.student_id === currentStudentId;
-            const stMastery = Math.round((st.mastery || 0) * 100);
-            return (
-              <button
-                key={st.student_id}
-                type="button"
-                className={`card ${isSelected ? 'active-student-card' : ''}`}
-                style={{
-                  margin: 0,
-                  padding: '12px 16px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  border: isSelected ? '2px solid var(--color-blue)' : '1px solid var(--color-border)',
-                  backgroundColor: isSelected ? '#ffffff' : '#fafafa',
-                }}
-                onClick={() => handleStudentClick(st.student_id)}
-                disabled={isLoading}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                  <strong style={{ fontSize: '15px' }}>{st.student_id}</strong>
-                  <span className={stMastery >= 70 ? 'badge-green' : stMastery >= 40 ? 'badge-blue' : 'badge-yellow'}>
-                    {st.recommended_difficulty || (stMastery >= 70 ? 'Advanced' : 'Beginner')}
-                  </span>
-                </div>
-                <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
-                  Mastery: <strong>{stMastery}%</strong> • Pace: <strong>{st.learning_pace || 'Moderate'}</strong> • Tests: <strong>{st.tests_completed || 0}</strong>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Selected Student Learning Twin Telemetry */}
-      <div className="card">
-        <h3 className="card-title">
-          <span>Active Learning Twin Telemetry</span>
-          <span className="badge-green">XGBoost & Dynamic State</span>
-        </h3>
-
-        <div className="stats-grid" style={{ marginBottom: '20px' }}>
-          <div className="stat-box">
-            <div className="stat-label">Student ID</div>
-            <div className="stat-value" style={{ fontSize: '18px' }}>{selectedDetails?.student_id || currentStudentId}</div>
-          </div>
-          <div className="stat-box">
-            <div className="stat-label">Cognitive Mastery</div>
-            <div className="stat-value" style={{ color: 'var(--color-green)' }}>{mastery}</div>
-          </div>
-          <div className="stat-box">
-            <div className="stat-label">Assessment Accuracy</div>
-            <div className="stat-value" style={{ color: 'var(--color-green)' }}>{accuracy}</div>
-          </div>
-          <div className="stat-box">
-            <div className="stat-label">Assessed Pace</div>
-            <div className="stat-value" style={{ fontSize: '18px' }}>{pace}</div>
-          </div>
-          <div className="stat-box">
-            <div className="stat-label">Target Difficulty</div>
-            <div className="stat-value" style={{ fontSize: '18px' }}>{difficulty}</div>
-          </div>
-          <div className="stat-box">
-            <div className="stat-label">Predicted Level</div>
-            <div className="stat-value" style={{ color: 'var(--color-blue)' }}>{predictedMastery}</div>
-          </div>
-        </div>
-
-        {/* Detailed State Attributes */}
-        <table className="kv-table">
-          <tbody>
-            <tr>
-              <td className="kv-label">Learning Style</td>
-              <td className="kv-value">{selectedDetails?.learning_style || 'Balanced'}</td>
-            </tr>
-            <tr>
-              <td className="kv-label">Current Curriculum Topic</td>
-              <td className="kv-value">{selectedDetails?.current_topic || 'Pointers'}</td>
-            </tr>
-            <tr>
-              <td className="kv-label">Tests Completed in Dataset</td>
-              <td className="kv-value">{selectedDetails?.tests_completed || 0}</td>
-            </tr>
-            <tr>
-              <td className="kv-label">Common Misconceptions</td>
-              <td className="kv-value">
-                {Array.isArray(selectedDetails?.common_misconceptions) && selectedDetails.common_misconceptions.length > 0
-                  ? selectedDetails.common_misconceptions.join(', ')
-                  : 'None logged yet for active topic'}
-              </td>
-            </tr>
-            <tr>
-              <td className="kv-label">Deterministic Personalization Strategy</td>
-              <td className="kv-value">
-                {mastery.startsWith('100') || difficulty === 'Advanced'
-                  ? 'High Mastery Track: Edge cases, memory optimization, pointer arithmetic pitfalls, concise high-density instruction'
-                  : 'Beginner Scaffolding Track: Real-world analogies, step-by-step memory diagrams, defensive code checks, guided hints'}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      {/* Action to test live generation */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
-        <button
-          type="button"
-          className="btn-secondary"
-          onClick={() => onNavigate('practice')}
-        >
-          Practice with this Student Profile →
-        </button>
-        <button
-          type="button"
-          className="btn-primary"
-          onClick={() => onNavigate('learn')}
-        >
-          Generate Personalized Lesson for {selectedDetails?.student_id || currentStudentId} →
-        </button>
       </div>
     </div>
   );

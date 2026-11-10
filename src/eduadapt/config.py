@@ -56,6 +56,41 @@ class Settings(BaseSettings):
     c_sandbox_timeout: float = Field(default=30.0, alias="C_SANDBOX_TIMEOUT")
     c_compile_timeout: float = Field(default=10.0, alias="C_COMPILE_TIMEOUT")
 
+    # Database Configuration (PostgreSQL foundation)
+    database_url: str = Field(
+        default="postgresql+psycopg://postgres:postgres@localhost:5432/eduadapt",
+        alias="DATABASE_URL",
+    )
+    database_echo: bool = Field(default=False, alias="DATABASE_ECHO")
+    database_pool_size: int = Field(default=10, alias="DATABASE_POOL_SIZE")
+    database_max_overflow: int = Field(default=20, alias="DATABASE_MAX_OVERFLOW")
+    database_pool_timeout: float = Field(default=30.0, alias="DATABASE_POOL_TIMEOUT")
+
+    # Authentication & Security Configuration
+    jwt_secret_key: str = Field(
+        default="eduadapt-secure-jwt-secret-key-pps-2026-production-change-me",
+        alias="JWT_SECRET_KEY",
+    )
+    jwt_algorithm: str = Field(default="HS256", alias="JWT_ALGORITHM")
+    jwt_access_token_expire_minutes: int = Field(
+        default=1440, alias="JWT_ACCESS_TOKEN_EXPIRE_MINUTES"
+    )
+    otp_expire_seconds: int = Field(default=300, alias="OTP_EXPIRE_SECONDS")
+    otp_max_attempts: int = Field(default=3, alias="OTP_MAX_ATTEMPTS")
+    otp_resend_cooldown_seconds: int = Field(
+        default=30, alias="OTP_RESEND_COOLDOWN_SECONDS"
+    )
+
+    # Email Delivery (SMTP) Configuration for OTP & Notifications
+    smtp_host: str = Field(default="", alias="SMTP_HOST")
+    smtp_port: int = Field(default=587, alias="SMTP_PORT")
+    smtp_username: str = Field(default="", alias="SMTP_USERNAME")
+    smtp_password: str = Field(default="", alias="SMTP_PASSWORD")
+    smtp_from_email: str = Field(
+        default="noreply@eduadapt.app", alias="SMTP_FROM_EMAIL"
+    )
+    smtp_use_tls: bool = Field(default=True, alias="SMTP_USE_TLS")
+
     # Base Paths
     base_dir: Path = Path(__file__).resolve().parent.parent.parent
 

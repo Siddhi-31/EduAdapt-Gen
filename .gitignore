@@ -65,6 +65,17 @@ weights/
 vector_db/*
 !vector_db/.gitkeep
 
+# Node & Frontend
+node_modules/
+**/node_modules/
+frontend/dist/
+dist/
+
+# Duplicate/Stray folders
+front end/
+FRONT_END/
+eduadapt-gen/
+
 # Processed intermediate curriculum files (Rebuildable)
 data/processed/*
 !data/processed/.gitkeep

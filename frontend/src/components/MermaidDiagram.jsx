@@ -209,7 +209,7 @@ export default function MermaidDiagram({ code, title, explanation, topic }) {
           } catch (importErr) {
             // Offline fallback
             if (isMounted) {
-              setRenderError('Interactive visual renderer in offline mode. Diagram architecture displayed below.');
+              setRenderError('Visual diagram source displayed below.');
               setLoading(false);
             }
             return;
@@ -269,8 +269,8 @@ export default function MermaidDiagram({ code, title, explanation, topic }) {
     <div className="diagram-container">
       <div className="diagram-header">
         <div className="diagram-title-group">
-          <span className="diagram-badge">Architecture Diagram</span>
-          <span className="diagram-title">{title || 'Architectural Flow'}</span>
+          <span className="diagram-badge">Concept Diagram</span>
+          <span className="diagram-title">{title || 'Visual Flow'}</span>
         </div>
         <button
           type="button"
@@ -302,7 +302,7 @@ export default function MermaidDiagram({ code, title, explanation, topic }) {
         {renderError && (
           <div className="diagram-fallback">
             <div className="diagram-fallback-notice">
-              <strong>Diagram Architecture:</strong> {renderError}
+              <strong>Diagram Source:</strong> {renderError}
             </div>
             <pre className="diagram-fallback-code">
               <code>{cleanCode}</code>

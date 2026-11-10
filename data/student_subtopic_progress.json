@@ -143,7 +143,7 @@
           "mastery": 0.95,
           "learning_cycle": 1,
           "max_cycles": 5,
-          "attempts": 8,
+          "attempts": 16,
           "accuracy": 1.0,
           "identified_misconceptions": [],
           "error_categories": [],
@@ -201,6 +201,70 @@
               "is_correct": true,
               "accuracy": 1.0,
               "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T16:34:22.611343",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T16:54:39.429731",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T17:05:33.046409",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T17:27:59.198239",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T17:35:59.776541",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T18:00:45.519242",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T19:01:38.860232",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T19:22:24.045326",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
             }
           ],
           "is_completed": true,
@@ -208,7 +272,7 @@
         }
       },
       "created_at": "2026-11-04T12:11:30.838375",
-      "updated_at": "2026-11-04T13:49:01.450955",
+      "updated_at": "2026-11-07T19:22:24.045326",
       "completed_count": 2,
       "mastered_count": 2,
       "total_count": 2,
@@ -731,9 +795,9 @@
     "Pointers": {
       "student_id": "S001",
       "parent_topic": "Pointers",
-      "overall_mastery": 0.13,
+      "overall_mastery": 0.61,
       "mastery_tier": "Beginner",
-      "active_subtopic_id": "ptr_operators",
+      "active_subtopic_id": "ptr_safety_debugging",
       "subtopics": {
         "ptr_intro_addresses": {
           "id": "ptr_intro_addresses",
@@ -781,7 +845,7 @@
           "id": "ptr_decl_init",
           "title": "Pointer Declaration and Initialization",
           "order": 2,
-          "status": "Mastered",
+          "status": "MASTERED",
           "mastery": 0.57,
           "is_completed": true,
           "reading_completed": false,
@@ -811,156 +875,523 @@
           "id": "ptr_operators",
           "title": "Address-of (&) and Dereference (*) Operators",
           "order": 3,
-          "status": "In Progress",
-          "mastery": 0.0,
-          "is_completed": false,
+          "status": "MASTERED",
+          "mastery": 0.57,
+          "is_completed": true,
           "reading_completed": false,
           "learning_cycle": 1,
           "max_cycles": 5,
-          "attempts": 0,
-          "accuracy": 0.0,
+          "attempts": 1,
+          "accuracy": 1.0,
           "identified_misconceptions": [],
           "error_categories": [],
-          "last_score": 0.0,
-          "remediation_focus": "",
+          "last_score": 95.0,
+          "remediation_focus": "Mastery achieved. Ready to advance to the next subtopic.",
           "prerequisites": [
             "ptr_decl_init"
           ],
-          "history": []
+          "history": [
+            {
+              "timestamp": "2026-11-07T16:34:12.080697",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            }
+          ]
         },
         "ptr_arithmetic": {
           "id": "ptr_arithmetic",
           "title": "Pointer Arithmetic and Type Scaling",
           "order": 4,
-          "status": "LOCKED",
-          "mastery": 0.0,
-          "is_completed": false,
+          "status": "MASTERED",
+          "mastery": 0.57,
+          "is_completed": true,
           "reading_completed": false,
           "learning_cycle": 1,
           "max_cycles": 5,
-          "attempts": 0,
-          "accuracy": 0.0,
+          "attempts": 1,
+          "accuracy": 1.0,
           "identified_misconceptions": [],
           "error_categories": [],
-          "last_score": 0.0,
-          "remediation_focus": "",
+          "last_score": 95.0,
+          "remediation_focus": "Mastery achieved. Ready to advance to the next subtopic.",
           "prerequisites": [
             "ptr_operators"
           ],
-          "history": []
+          "history": [
+            {
+              "timestamp": "2026-11-07T16:34:13.292718",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            }
+          ]
         },
         "ptr_arrays": {
           "id": "ptr_arrays",
           "title": "Pointers and Array Equivalence",
           "order": 5,
-          "status": "LOCKED",
-          "mastery": 0.0,
-          "is_completed": false,
+          "status": "MASTERED",
+          "mastery": 0.57,
+          "is_completed": true,
           "reading_completed": false,
           "learning_cycle": 1,
           "max_cycles": 5,
-          "attempts": 0,
-          "accuracy": 0.0,
+          "attempts": 1,
+          "accuracy": 1.0,
           "identified_misconceptions": [],
           "error_categories": [],
-          "last_score": 0.0,
-          "remediation_focus": "",
+          "last_score": 95.0,
+          "remediation_focus": "Mastery achieved. Ready to advance to the next subtopic.",
           "prerequisites": [
             "ptr_arithmetic"
           ],
-          "history": []
+          "history": [
+            {
+              "timestamp": "2026-11-07T16:34:21.553404",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            }
+          ]
         },
         "ptr_strings": {
           "id": "ptr_strings",
           "title": "Pointers and Strings",
           "order": 6,
-          "status": "LOCKED",
-          "mastery": 0.0,
-          "is_completed": false,
+          "status": "MASTERED",
+          "mastery": 0.57,
+          "is_completed": true,
           "reading_completed": false,
           "learning_cycle": 1,
           "max_cycles": 5,
-          "attempts": 0,
-          "accuracy": 0.0,
+          "attempts": 1,
+          "accuracy": 1.0,
           "identified_misconceptions": [],
           "error_categories": [],
-          "last_score": 0.0,
-          "remediation_focus": "",
+          "last_score": 95.0,
+          "remediation_focus": "Mastery achieved. Ready to advance to the next subtopic.",
           "prerequisites": [
             "ptr_arrays"
           ],
-          "history": []
+          "history": [
+            {
+              "timestamp": "2026-11-07T16:34:21.602937",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            }
+          ]
         },
         "ptr_functions": {
           "id": "ptr_functions",
           "title": "Pointers and Functions (Call by Reference)",
           "order": 7,
-          "status": "LOCKED",
-          "mastery": 0.0,
-          "is_completed": false,
+          "status": "MASTERED",
+          "mastery": 0.57,
+          "is_completed": true,
           "reading_completed": false,
           "learning_cycle": 1,
           "max_cycles": 5,
-          "attempts": 0,
-          "accuracy": 0.0,
+          "attempts": 1,
+          "accuracy": 1.0,
           "identified_misconceptions": [],
           "error_categories": [],
-          "last_score": 0.0,
-          "remediation_focus": "",
+          "last_score": 95.0,
+          "remediation_focus": "Mastery achieved. Ready to advance to the next subtopic.",
           "prerequisites": [
             "ptr_operators"
           ],
-          "history": []
+          "history": [
+            {
+              "timestamp": "2026-11-07T16:34:21.663969",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            }
+          ]
         },
         "ptr_to_ptr": {
           "id": "ptr_to_ptr",
           "title": "Pointer to Pointer (Double Indirection)",
           "order": 8,
-          "status": "LOCKED",
-          "mastery": 0.0,
-          "is_completed": false,
+          "status": "MASTERED",
+          "mastery": 0.57,
+          "is_completed": true,
           "reading_completed": false,
           "learning_cycle": 1,
           "max_cycles": 5,
-          "attempts": 0,
-          "accuracy": 0.0,
+          "attempts": 1,
+          "accuracy": 1.0,
           "identified_misconceptions": [],
           "error_categories": [],
-          "last_score": 0.0,
-          "remediation_focus": "",
+          "last_score": 95.0,
+          "remediation_focus": "Mastery achieved. Ready to advance to the next subtopic.",
           "prerequisites": [
             "ptr_operators"
           ],
-          "history": []
+          "history": [
+            {
+              "timestamp": "2026-11-07T16:34:25.660501",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            }
+          ]
         },
         "ptr_safety_debugging": {
           "id": "ptr_safety_debugging",
           "title": "NULL, Dangling, Wild Pointers and Debugging",
           "order": 9,
-          "status": "LOCKED",
-          "mastery": 0.0,
-          "is_completed": false,
+          "status": "Mastered",
+          "mastery": 0.95,
+          "is_completed": true,
           "reading_completed": false,
           "learning_cycle": 1,
           "max_cycles": 5,
-          "attempts": 0,
-          "accuracy": 0.0,
+          "attempts": 39,
+          "accuracy": 1.0,
           "identified_misconceptions": [],
           "error_categories": [],
-          "last_score": 0.0,
-          "remediation_focus": "",
+          "last_score": 95.0,
+          "remediation_focus": "Mastery achieved. Ready to advance to the next subtopic.",
           "prerequisites": [
             "ptr_operators"
           ],
-          "history": []
+          "history": [
+            {
+              "timestamp": "2026-11-07T16:54:29.388043",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T16:54:30.472800",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T16:54:38.504479",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T16:54:38.551527",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T16:54:38.613382",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T16:54:42.034184",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T17:05:22.843327",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T17:05:24.008774",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T17:05:32.126721",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T17:05:32.172934",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T17:05:32.229904",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T17:05:35.701783",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T17:27:54.642936",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T17:27:54.691442",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T17:27:54.753009",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T17:35:49.316136",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T17:35:50.462821",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T17:35:58.830194",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T17:35:58.880654",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T17:35:58.936818",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T17:36:02.487311",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T18:00:35.018904",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T18:00:36.121225",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T18:00:44.671786",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T18:00:44.712039",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T18:00:44.767224",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T18:00:48.138283",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T19:01:26.606121",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T19:01:28.109766",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T19:01:37.650427",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T19:01:37.713139",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T19:01:37.787215",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T19:01:42.812280",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T19:22:12.025958",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T19:22:13.139031",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T19:22:23.077304",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T19:22:23.132596",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T19:22:23.196145",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T19:22:27.721668",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            }
+          ]
         }
       },
       "created_at": "2026-11-04T17:23:12.678852",
-      "updated_at": "2026-11-04T17:32:26.345928",
-      "completed_count": 2,
-      "mastered_count": 2,
+      "updated_at": "2026-11-07T19:22:27.721668",
+      "completed_count": 9,
+      "mastered_count": 9,
       "total_count": 9,
-      "progress_percent": 22
+      "progress_percent": 100
     },
     "Conditionals": {
       "student_id": "S001",
@@ -1058,6 +1489,61 @@
       "mastered_count": 2,
       "total_count": 2,
       "progress_percent": 100
+    },
+    "Variables and Data Types": {
+      "student_id": "S001",
+      "parent_topic": "Variables and Data Types",
+      "overall_mastery": 0.0,
+      "mastery_tier": "Beginner",
+      "active_subtopic_id": "var_primitives",
+      "subtopics": {
+        "var_primitives": {
+          "id": "var_primitives",
+          "title": "Fundamental Data Types and sizeof Operator",
+          "order": 1,
+          "status": "In Progress",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [],
+          "history": []
+        },
+        "var_scope_qualifiers": {
+          "id": "var_scope_qualifiers",
+          "title": "Variable Scope, Lifetime, and Type Casting",
+          "order": 2,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "var_primitives"
+          ],
+          "history": []
+        }
+      },
+      "created_at": "2026-11-07T18:19:07.781360",
+      "updated_at": "2026-11-07T18:19:07.781360",
+      "completed_count": 0,
+      "mastered_count": 0,
+      "total_count": 2,
+      "progress_percent": 0
     }
   },
   "S999": {
@@ -1182,7 +1668,7 @@
           "mastery": 0.0,
           "learning_cycle": 5,
           "max_cycles": 5,
-          "attempts": 9,
+          "attempts": 17,
           "accuracy": 0.0,
           "identified_misconceptions": [
             "Loops"
@@ -1258,6 +1744,86 @@
             },
             {
               "timestamp": "2026-11-04T13:49:00.669699",
+              "cycle": 5,
+              "score": 35.0,
+              "is_correct": false,
+              "accuracy": 0.0,
+              "weak_concepts": [
+                "Loops"
+              ]
+            },
+            {
+              "timestamp": "2026-11-07T16:34:21.722486",
+              "cycle": 5,
+              "score": 35.0,
+              "is_correct": false,
+              "accuracy": 0.0,
+              "weak_concepts": [
+                "Loops"
+              ]
+            },
+            {
+              "timestamp": "2026-11-07T16:54:38.664168",
+              "cycle": 5,
+              "score": 35.0,
+              "is_correct": false,
+              "accuracy": 0.0,
+              "weak_concepts": [
+                "Loops"
+              ]
+            },
+            {
+              "timestamp": "2026-11-07T17:05:32.284129",
+              "cycle": 5,
+              "score": 35.0,
+              "is_correct": false,
+              "accuracy": 0.0,
+              "weak_concepts": [
+                "Loops"
+              ]
+            },
+            {
+              "timestamp": "2026-11-07T17:27:54.798655",
+              "cycle": 5,
+              "score": 35.0,
+              "is_correct": false,
+              "accuracy": 0.0,
+              "weak_concepts": [
+                "Loops"
+              ]
+            },
+            {
+              "timestamp": "2026-11-07T17:35:58.979952",
+              "cycle": 5,
+              "score": 35.0,
+              "is_correct": false,
+              "accuracy": 0.0,
+              "weak_concepts": [
+                "Loops"
+              ]
+            },
+            {
+              "timestamp": "2026-11-07T18:00:44.805976",
+              "cycle": 5,
+              "score": 35.0,
+              "is_correct": false,
+              "accuracy": 0.0,
+              "weak_concepts": [
+                "Loops"
+              ]
+            },
+            {
+              "timestamp": "2026-11-07T19:01:37.847955",
+              "cycle": 5,
+              "score": 35.0,
+              "is_correct": false,
+              "accuracy": 0.0,
+              "weak_concepts": [
+                "Loops"
+              ]
+            },
+            {
+              "timestamp": "2026-11-07T19:22:23.260635",
               "cycle": 5,
               "score": 35.0,
               "is_correct": false,
@@ -1356,7 +1922,7 @@
         }
       },
       "created_at": "2026-11-04T12:11:30.094741",
-      "updated_at": "2026-11-04T13:49:00.669699",
+      "updated_at": "2026-11-07T19:22:23.260635",
       "completed_count": 0,
       "mastered_count": 0,
       "total_count": 5,
@@ -1377,7 +1943,7 @@
           "mastery": 0.0,
           "learning_cycle": 5,
           "max_cycles": 5,
-          "attempts": 9,
+          "attempts": 17,
           "accuracy": 0.0,
           "identified_misconceptions": [
             "Arrays"
@@ -1460,6 +2026,86 @@
               "weak_concepts": [
                 "Arrays"
               ]
+            },
+            {
+              "timestamp": "2026-11-07T16:34:21.876768",
+              "cycle": 5,
+              "score": 35.0,
+              "is_correct": false,
+              "accuracy": 0.0,
+              "weak_concepts": [
+                "Arrays"
+              ]
+            },
+            {
+              "timestamp": "2026-11-07T16:54:38.759489",
+              "cycle": 5,
+              "score": 35.0,
+              "is_correct": false,
+              "accuracy": 0.0,
+              "weak_concepts": [
+                "Arrays"
+              ]
+            },
+            {
+              "timestamp": "2026-11-07T17:05:32.377621",
+              "cycle": 5,
+              "score": 35.0,
+              "is_correct": false,
+              "accuracy": 0.0,
+              "weak_concepts": [
+                "Arrays"
+              ]
+            },
+            {
+              "timestamp": "2026-11-07T17:27:57.118076",
+              "cycle": 5,
+              "score": 35.0,
+              "is_correct": false,
+              "accuracy": 0.0,
+              "weak_concepts": [
+                "Arrays"
+              ]
+            },
+            {
+              "timestamp": "2026-11-07T17:35:59.063290",
+              "cycle": 5,
+              "score": 35.0,
+              "is_correct": false,
+              "accuracy": 0.0,
+              "weak_concepts": [
+                "Arrays"
+              ]
+            },
+            {
+              "timestamp": "2026-11-07T18:00:44.894773",
+              "cycle": 5,
+              "score": 35.0,
+              "is_correct": false,
+              "accuracy": 0.0,
+              "weak_concepts": [
+                "Arrays"
+              ]
+            },
+            {
+              "timestamp": "2026-11-07T19:01:37.952018",
+              "cycle": 5,
+              "score": 35.0,
+              "is_correct": false,
+              "accuracy": 0.0,
+              "weak_concepts": [
+                "Arrays"
+              ]
+            },
+            {
+              "timestamp": "2026-11-07T19:22:23.363441",
+              "cycle": 5,
+              "score": 35.0,
+              "is_correct": false,
+              "accuracy": 0.0,
+              "weak_concepts": [
+                "Arrays"
+              ]
             }
           ],
           "is_completed": false,
@@ -1530,7 +2176,7 @@
         }
       },
       "created_at": "2026-11-04T12:11:30.189188",
-      "updated_at": "2026-11-04T13:49:00.773166",
+      "updated_at": "2026-11-07T19:22:23.363441",
       "completed_count": 0,
       "mastered_count": 0,
       "total_count": 4,
@@ -1972,7 +2618,7 @@
           "prerequisites": [],
           "history": [
             {
-              "timestamp": "2026-11-04T13:49:12.160117",
+              "timestamp": "2026-11-07T19:23:20.960070",
               "attempt": 1,
               "selected_option": "A",
               "correct_option": "B",
@@ -1983,7 +2629,7 @@
               "time_taken_seconds": 25
             },
             {
-              "timestamp": "2026-11-04T13:49:12.185202",
+              "timestamp": "2026-11-07T19:23:20.993199",
               "attempt": 2,
               "selected_option": "B",
               "correct_option": "B",
@@ -1994,7 +2640,7 @@
               "time_taken_seconds": 25
             }
           ],
-          "reading_completed_at": "2026-11-04T13:49:12.131740"
+          "reading_completed_at": "2026-11-07T19:23:20.930497"
         },
         "ptr_decl_init": {
           "id": "ptr_decl_init",
@@ -2165,12 +2811,592 @@
           "history": []
         }
       },
-      "created_at": "2026-11-04T13:49:12.092108",
-      "updated_at": "2026-11-04T13:49:12.185202",
+      "created_at": "2026-11-07T19:23:20.878029",
+      "updated_at": "2026-11-07T19:23:20.993199",
       "completed_count": 1,
       "mastered_count": 0,
       "total_count": 9,
       "progress_percent": 11
+    }
+  },
+  "S-DB4F76": {
+    "Pointers": {
+      "student_id": "S-DB4F76",
+      "parent_topic": "Pointers",
+      "overall_mastery": 0.0,
+      "mastery_tier": "Beginner",
+      "active_subtopic_id": "ptr_intro_addresses",
+      "subtopics": {
+        "ptr_intro_addresses": {
+          "id": "ptr_intro_addresses",
+          "title": "Introduction to Memory Addresses and Pointer Concept",
+          "order": 1,
+          "status": "In Progress",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [],
+          "history": []
+        },
+        "ptr_decl_init": {
+          "id": "ptr_decl_init",
+          "title": "Pointer Declaration and Initialization",
+          "order": 2,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_intro_addresses"
+          ],
+          "history": []
+        },
+        "ptr_operators": {
+          "id": "ptr_operators",
+          "title": "Address-of (&) and Dereference (*) Operators",
+          "order": 3,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_decl_init"
+          ],
+          "history": []
+        },
+        "ptr_arithmetic": {
+          "id": "ptr_arithmetic",
+          "title": "Pointer Arithmetic and Type Scaling",
+          "order": 4,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_operators"
+          ],
+          "history": []
+        },
+        "ptr_arrays": {
+          "id": "ptr_arrays",
+          "title": "Pointers and Array Equivalence",
+          "order": 5,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_arithmetic"
+          ],
+          "history": []
+        },
+        "ptr_strings": {
+          "id": "ptr_strings",
+          "title": "Pointers and Strings",
+          "order": 6,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_arrays"
+          ],
+          "history": []
+        },
+        "ptr_functions": {
+          "id": "ptr_functions",
+          "title": "Pointers and Functions (Call by Reference)",
+          "order": 7,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_operators"
+          ],
+          "history": []
+        },
+        "ptr_to_ptr": {
+          "id": "ptr_to_ptr",
+          "title": "Pointer to Pointer (Double Indirection)",
+          "order": 8,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_operators"
+          ],
+          "history": []
+        },
+        "ptr_safety_debugging": {
+          "id": "ptr_safety_debugging",
+          "title": "NULL, Dangling, Wild Pointers and Debugging",
+          "order": 9,
+          "status": "LOCKED",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "ptr_operators"
+          ],
+          "history": []
+        }
+      },
+      "created_at": "2026-11-07T17:08:22.454711",
+      "updated_at": "2026-11-07T17:08:22.454711",
+      "completed_count": 0,
+      "mastered_count": 0,
+      "total_count": 9,
+      "progress_percent": 0
+    },
+    "Variables and Data Types": {
+      "student_id": "S-DB4F76",
+      "parent_topic": "Variables and Data Types",
+      "overall_mastery": 0.28,
+      "mastery_tier": "Beginner",
+      "active_subtopic_id": "var_scope_qualifiers",
+      "subtopics": {
+        "var_primitives": {
+          "id": "var_primitives",
+          "title": "Fundamental Data Types and sizeof Operator",
+          "order": 1,
+          "status": "Mastered",
+          "mastery": 0.57,
+          "is_completed": true,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 1,
+          "accuracy": 1.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 95.0,
+          "remediation_focus": "Mastery achieved. Ready to advance to the next subtopic.",
+          "prerequisites": [],
+          "history": [
+            {
+              "timestamp": "2026-11-07T17:41:01.715416",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            }
+          ]
+        },
+        "var_scope_qualifiers": {
+          "id": "var_scope_qualifiers",
+          "title": "Variable Scope, Lifetime, and Type Casting",
+          "order": 2,
+          "status": "In Progress",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "var_primitives"
+          ],
+          "history": []
+        }
+      },
+      "created_at": "2026-11-07T17:41:01.681880",
+      "updated_at": "2026-11-07T17:41:01.715416",
+      "completed_count": 1,
+      "mastered_count": 1,
+      "total_count": 2,
+      "progress_percent": 50
+    }
+  },
+  "S-7D13CB": {
+    "Variables and Data Types": {
+      "student_id": "S-7D13CB",
+      "parent_topic": "Variables and Data Types",
+      "overall_mastery": 0.39,
+      "mastery_tier": "Beginner",
+      "active_subtopic_id": "var_scope_qualifiers",
+      "subtopics": {
+        "var_primitives": {
+          "id": "var_primitives",
+          "title": "Fundamental Data Types and sizeof Operator",
+          "order": 1,
+          "status": "COMPLETED",
+          "mastery": 0.78,
+          "is_completed": true,
+          "reading_completed": true,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 2,
+          "accuracy": 0.5,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 80.0,
+          "remediation_focus": "Mastery gate passed. Ready to advance.",
+          "prerequisites": [],
+          "history": [
+            {
+              "timestamp": "2026-11-07T18:59:06.878205",
+              "cycle": 1,
+              "score": 95.0,
+              "is_correct": true,
+              "accuracy": 1.0,
+              "weak_concepts": []
+            },
+            {
+              "timestamp": "2026-11-07T19:32:22.607615",
+              "attempt": 2,
+              "selected_option": "B) 8 bytes",
+              "correct_option": "B",
+              "is_correct": true,
+              "score": 80.0,
+              "mastery": 0.78,
+              "status": "COMPLETED",
+              "time_taken_seconds": 25
+            }
+          ],
+          "reading_completed_at": "2026-11-07T19:32:12.821249"
+        },
+        "var_scope_qualifiers": {
+          "id": "var_scope_qualifiers",
+          "title": "Variable Scope, Lifetime, and Type Casting",
+          "order": 2,
+          "status": "IN_PROGRESS",
+          "mastery": 0.0,
+          "is_completed": false,
+          "reading_completed": false,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 0,
+          "accuracy": 0.0,
+          "identified_misconceptions": [],
+          "error_categories": [],
+          "last_score": 0.0,
+          "remediation_focus": "",
+          "prerequisites": [
+            "var_primitives"
+          ],
+          "history": []
+        }
+      },
+      "created_at": "2026-11-07T18:55:17.596116",
+      "updated_at": "2026-11-07T19:32:22.607615",
+      "completed_count": 1,
+      "mastered_count": 0,
+      "total_count": 2,
+      "progress_percent": 50
+    }
+  },
+  "S-DC9412": {
+    "Variables and Data Types": {
+      "student_id": "S-DC9412",
+      "parent_topic": "Variables and Data Types",
+      "overall_mastery": 0.35,
+      "mastery_tier": "Beginner",
+      "active_subtopic_id": "var_scope_qualifiers",
+      "subtopics": {
+        "var_primitives": {
+          "id": "var_primitives",
+          "title": "Fundamental Data Types and sizeof Operator",
+          "order": 1,
+          "status": "REMEDIATION_REQUIRED",
+          "mastery": 0.35,
+          "is_completed": true,
+          "reading_completed": true,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 10,
+          "accuracy": 0.0,
+          "identified_misconceptions": [
+            "Selected option A does not correctly represent Fundamental Data Types and sizeof Operator.",
+            "Selected option A does not correctly represent Fundamental Data Types and sizeof Operator.",
+            "Selected option B does not correctly represent Fundamental Data Types and sizeof Operator.",
+            "Selected option C does not correctly represent Fundamental Data Types and sizeof Operator."
+          ],
+          "error_categories": [],
+          "last_score": 35.0,
+          "remediation_focus": "Selected option C does not correctly represent Fundamental Data Types and sizeof Operator.",
+          "prerequisites": [],
+          "history": [
+            {
+              "timestamp": "2026-11-09T18:42:15.183804",
+              "attempt": 1,
+              "selected_option": "A) Exactly 1 byte",
+              "correct_option": "A",
+              "is_correct": true,
+              "score": 100.0,
+              "mastery": 0.9,
+              "status": "MASTERED",
+              "time_taken_seconds": 25
+            },
+            {
+              "timestamp": "2026-11-09T18:42:24.273890",
+              "attempt": 2,
+              "selected_option": "A) Exactly 1 byte",
+              "correct_option": "A",
+              "is_correct": true,
+              "score": 80.0,
+              "mastery": 0.78,
+              "status": "COMPLETED",
+              "time_taken_seconds": 25
+            },
+            {
+              "timestamp": "2026-11-09T18:44:29.115503",
+              "attempt": 3,
+              "selected_option": "A) Exactly 1 byte",
+              "correct_option": "A",
+              "is_correct": true,
+              "score": 70.0,
+              "mastery": 0.7,
+              "status": "COMPLETED",
+              "time_taken_seconds": 25
+            },
+            {
+              "timestamp": "2026-11-09T19:09:17.432702",
+              "attempt": 4,
+              "selected_option": "A) 1",
+              "correct_option": "B",
+              "is_correct": false,
+              "score": 35.0,
+              "mastery": 0.35,
+              "status": "REMEDIATION_REQUIRED",
+              "time_taken_seconds": 25
+            },
+            {
+              "timestamp": "2026-11-09T19:09:21.425854",
+              "attempt": 5,
+              "selected_option": "B) 3",
+              "correct_option": "B",
+              "is_correct": true,
+              "score": 70.0,
+              "mastery": 0.7,
+              "status": "COMPLETED",
+              "time_taken_seconds": 25
+            },
+            {
+              "timestamp": "2026-11-09T19:09:23.879920",
+              "attempt": 6,
+              "selected_option": "B) 3",
+              "correct_option": "B",
+              "is_correct": true,
+              "score": 70.0,
+              "mastery": 0.7,
+              "status": "COMPLETED",
+              "time_taken_seconds": 25
+            },
+            {
+              "timestamp": "2026-11-09T19:21:34.954466",
+              "attempt": 7,
+              "selected_option": "A) 1",
+              "correct_option": "B",
+              "is_correct": false,
+              "score": 35.0,
+              "mastery": 0.35,
+              "status": "REMEDIATION_REQUIRED",
+              "time_taken_seconds": 25
+            },
+            {
+              "timestamp": "2026-11-10T08:59:04.865333",
+              "attempt": 8,
+              "selected_option": "A) Exactly 1 byte",
+              "correct_option": "A",
+              "is_correct": true,
+              "score": 70.0,
+              "mastery": 0.7,
+              "status": "COMPLETED",
+              "time_taken_seconds": 25
+            },
+            {
+              "timestamp": "2026-11-10T08:59:08.504253",
+              "attempt": 9,
+              "selected_option": "B) 2 bytes",
+              "correct_option": "A",
+              "is_correct": false,
+              "score": 35.0,
+              "mastery": 0.35,
+              "status": "REMEDIATION_REQUIRED",
+              "time_taken_seconds": 25
+            },
+            {
+              "timestamp": "2026-11-10T09:23:46.654030",
+              "attempt": 10,
+              "selected_option": "C) 4 bytes",
+              "correct_option": "A",
+              "is_correct": false,
+              "score": 35.0,
+              "mastery": 0.35,
+              "status": "REMEDIATION_REQUIRED",
+              "time_taken_seconds": 25
+            }
+          ],
+          "reading_completed_at": "2026-11-09T18:41:57.878468"
+        },
+        "var_scope_qualifiers": {
+          "id": "var_scope_qualifiers",
+          "title": "Variable Scope, Lifetime, and Type Casting",
+          "order": 2,
+          "status": "REMEDIATION_REQUIRED",
+          "mastery": 0.35,
+          "is_completed": true,
+          "reading_completed": true,
+          "learning_cycle": 1,
+          "max_cycles": 5,
+          "attempts": 5,
+          "accuracy": 0.0,
+          "identified_misconceptions": [
+            "Selected option B does not correctly represent Variable Scope, Lifetime, and Type Casting.",
+            "Selected option B does not correctly represent Variable Scope, Lifetime, and Type Casting."
+          ],
+          "error_categories": [],
+          "last_score": 35.0,
+          "remediation_focus": "Selected option B does not correctly represent Variable Scope, Lifetime, and Type Casting.",
+          "prerequisites": [
+            "var_primitives"
+          ],
+          "history": [
+            {
+              "timestamp": "2026-11-09T18:48:54.754294",
+              "attempt": 1,
+              "selected_option": "A) Exactly 1 byte",
+              "correct_option": "A",
+              "is_correct": true,
+              "score": 100.0,
+              "mastery": 0.9,
+              "status": "MASTERED",
+              "time_taken_seconds": 25
+            },
+            {
+              "timestamp": "2026-11-09T18:49:00.802114",
+              "attempt": 2,
+              "selected_option": "A) Exactly 1 byte",
+              "correct_option": "A",
+              "is_correct": true,
+              "score": 80.0,
+              "mastery": 0.78,
+              "status": "COMPLETED",
+              "time_taken_seconds": 25
+            },
+            {
+              "timestamp": "2026-11-09T18:49:03.121437",
+              "attempt": 3,
+              "selected_option": "B) 2 bytes",
+              "correct_option": "A",
+              "is_correct": false,
+              "score": 35.0,
+              "mastery": 0.35,
+              "status": "REMEDIATION_REQUIRED",
+              "time_taken_seconds": 25
+            },
+            {
+              "timestamp": "2026-11-09T18:49:11.804588",
+              "attempt": 4,
+              "selected_option": "A) Exactly 1 byte",
+              "correct_option": "A",
+              "is_correct": true,
+              "score": 70.0,
+              "mastery": 0.7,
+              "status": "COMPLETED",
+              "time_taken_seconds": 25
+            },
+            {
+              "timestamp": "2026-11-09T18:49:14.898768",
+              "attempt": 5,
+              "selected_option": "B) 2 bytes",
+              "correct_option": "A",
+              "is_correct": false,
+              "score": 35.0,
+              "mastery": 0.35,
+              "status": "REMEDIATION_REQUIRED",
+              "time_taken_seconds": 25
+            }
+          ],
+          "reading_completed_at": "2026-11-09T18:48:52.366939"
+        }
+      },
+      "created_at": "2026-11-09T18:24:04.113691",
+      "updated_at": "2026-11-10T09:23:46.654135",
+      "completed_count": 2,
+      "mastered_count": 0,
+      "total_count": 2,
+      "progress_percent": 100
     }
   }
 }

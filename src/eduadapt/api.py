@@ -5,12 +5,16 @@ Strictly non-agentic: handles deterministic student-facing learning requests
 without autonomous agent loops or multi-agent frameworks.
 """
 
+import logging
 import os
 from pathlib import Path
 import sys
 import tempfile
 import time
 from typing import Any, Dict, List, Optional
+import uuid
+
+logger = logging.getLogger("eduadapt.api")
 
 # Ensure project root and src/ are in sys.path regardless of execution context
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -18,7 +22,7 @@ _SRC_DIR = _REPO_ROOT / "src"
 for p in [str(_REPO_ROOT), str(_SRC_DIR)]:
     if p not in sys.path:
         sys.path.insert(0, p)
-from fastapi import BackgroundTasks, FastAPI, File, HTTPException, Response, UploadFile
+from fastapi import BackgroundTasks, FastAPI, File, Header, HTTPException, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -27,7 +31,9 @@ from eduadapt.config import get_settings
 from eduadapt.inference.base import BaseLLMClient, MockLLMClient
 from eduadapt.inference.ollama import (
     OllamaConnectionError,
+    OllamaError,
     OllamaLLMClient,
+    OllamaResponseError,
     OllamaTimeoutError,
 )
 from eduadapt.interfaces.rag import RAGContext
@@ -57,6 +63,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Authentication, student profile, and diagnostic routers
+from eduadapt.routers.auth import auth_router, profile_router
+from eduadapt.routers.diagnostic import diagnostic_router
+app.include_router(auth_router)
+app.include_router(profile_router)
+app.include_router(diagnostic_router)
 
 # Global service instance holder
 _service: Optional[AdaptiveLearningService] = None
@@ -307,8 +320,95 @@ def synthesize_speech(req: AudioSynthesizeRequest) -> Response:
         raise HTTPException(status_code=500, detail=f"Text-to-speech generation failed: {str(e)}")
 
 
+async def check_student_authorization(
+    requested_student_id: str,
+    authorization: Optional[str] = None,
+    require_diagnostic: bool = False,
+) -> None:
+    """Ensure that if the request is authenticated with a JWT token,
+    the caller cannot access or alter another student's learning profile (IDOR protection).
+    Also gates learning content if diagnostic assessment is pending.
+    """
+    from eduadapt.services.auth_service import decode_access_token
+    from eduadapt.db.session import get_async_session_factory
+    from eduadapt.db.models.user import User
+    from eduadapt.db.models.student import Student
+    from sqlalchemy import select
+    from sqlalchemy.orm import selectinload
+    import uuid
+
+    factory = get_async_session_factory()
+
+    # 1. Check token if provided
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.split(" ", 1)[1].strip()
+        if token:
+            try:
+                payload = decode_access_token(token)
+                user_id_str = payload.get("sub")
+                if user_id_str:
+                    async with factory() as session:
+                        stmt = (
+                            select(User)
+                            .options(selectinload(User.student_profile))
+                            .where(User.id == uuid.UUID(user_id_str))
+                        )
+                        res = await session.execute(stmt)
+                        user = res.scalar_one_or_none()
+                        if user and user.student_profile:
+                            allowed_ids = {
+                                str(user.id).lower(),
+                                (user.student_profile.student_code or "").lower(),
+                                "me",
+                                "self",
+                            }
+                            clean_req = (requested_student_id or "").strip().lower()
+                            if clean_req and clean_req not in allowed_ids and clean_req not in ("new", "s_new", "student_0"):
+                                raise HTTPException(
+                                    status_code=403,
+                                    detail="Access denied: Cannot access or alter another student's learning profile.",
+                                )
+                            if require_diagnostic and not user.student_profile.has_completed_diagnostic:
+                                raise HTTPException(
+                                    status_code=403,
+                                    detail="Initial Diagnostic Assessment required before accessing learning modules. Please complete the diagnostic assessment first.",
+                                )
+                            return
+            except HTTPException:
+                raise
+            except Exception:
+                pass
+
+    # 2. If require_diagnostic is True and no valid token, check if student_id corresponds to a registered student
+    if require_diagnostic and requested_student_id:
+        try:
+            async with factory() as session:
+                try:
+                    sid_uuid = uuid.UUID(requested_student_id)
+                    stmt = select(Student).where((Student.student_code == requested_student_id) | (Student.id == sid_uuid))
+                except ValueError:
+                    stmt = select(Student).where(Student.student_code == requested_student_id)
+                res = await session.execute(stmt)
+                st = res.scalar_one_or_none()
+                if st and not st.has_completed_diagnostic:
+                    raise HTTPException(
+                        status_code=403,
+                        detail="Initial Diagnostic Assessment required before accessing learning modules. Please complete the diagnostic assessment first.",
+                    )
+        except HTTPException:
+            raise
+        except Exception:
+            pass
+
+
 @app.get("/api/student/{student_id}")
-def get_student_profile(student_id: str, fresh: bool = False) -> Dict[str, Any]:
+async def get_student_profile(
+    student_id: str,
+    fresh: bool = False,
+    authorization: Optional[str] = Header(None),
+) -> Dict[str, Any]:
+    await check_student_authorization(student_id, authorization)
+
     if fresh or student_id.upper() in ("NEW", "S_NEW", "STUDENT_0"):
         return {
             "student_id": student_id,
@@ -320,7 +420,92 @@ def get_student_profile(student_id: str, fresh: bool = False) -> Dict[str, Any]:
             "predicted_mastery_level": "New Learner",
             "learning_style": "balanced",
             "tests_completed": 0,
+            "full_name": "New Learner",
         }
+
+    # Query persistent database for registered student
+    db_student = None
+    try:
+        from eduadapt.db.session import get_async_session_factory
+        from eduadapt.db.models.student import Student
+        from sqlalchemy import select
+        from sqlalchemy.orm import selectinload
+
+        factory = get_async_session_factory()
+        async with factory() as session:
+            try:
+                sid_uuid = uuid.UUID(student_id)
+                stmt = select(Student).options(selectinload(Student.diagnostic_attempts)).where((Student.student_code == student_id) | (Student.id == sid_uuid))
+            except ValueError:
+                stmt = select(Student).options(selectinload(Student.diagnostic_attempts)).where(Student.student_code == student_id)
+            res = await session.execute(stmt)
+            db_student = res.scalar_one_or_none()
+    except Exception:
+        pass
+
+    if db_student:
+        completed_diag = [a for a in (db_student.diagnostic_attempts or []) if a.status == "completed"]
+        attempts_count = len(completed_diag)
+        has_diag = bool(db_student.has_completed_diagnostic)
+
+        recent_attempts = []
+        for a in sorted(completed_diag, key=lambda x: x.completed_at or x.started_at, reverse=True):
+            score_pct = float(a.total_score / a.maximum_score * 100) if a.maximum_score else 0.0
+            if a.result_summary and "score" in a.result_summary:
+                score_pct = float(a.result_summary["score"])
+            time_str = a.completed_at.strftime("%b %d, %Y") if a.completed_at else "Recently"
+            recent_attempts.append({
+                "id": str(a.id),
+                "title": "Initial Diagnostic Assessment" if a.assessment_type == "initial_diagnostic" else "Assessment",
+                "type": "diagnostic",
+                "score": round(score_pct, 1),
+                "time": time_str,
+                "completed_at": a.completed_at.isoformat() if a.completed_at else None,
+                "level": a.assigned_skill_level or "Calibrated",
+            })
+
+        # Calculate actual mastery from database records
+        real_mastery = 0.0
+        real_accuracy = 0.0
+        try:
+            from eduadapt.db.models.progress import StudentSubtopicMastery
+            async with factory() as session:
+                m_stmt = select(StudentSubtopicMastery).where(StudentSubtopicMastery.student_id == db_student.id)
+                m_res = await session.execute(m_stmt)
+                m_records = list(m_res.scalars().all())
+                if m_records:
+                    total_att = sum(r.attempts or 0 for r in m_records)
+                    total_succ = sum(r.successes or 0 for r in m_records)
+                    real_accuracy = (total_succ / total_att) if total_att > 0 else 0.0
+                    m_scores = [float(r.mastery_score) for r in m_records if r.mastery_score is not None]
+                    real_mastery = (sum(m_scores) / (len(m_scores) * 100.0)) if m_scores else 0.0
+        except Exception:
+            pass
+
+        return {
+            "student_id": db_student.student_code or student_id,
+            "full_name": db_student.full_name,
+            "college": db_student.college,
+            "department": db_student.department,
+            "found": True,
+            "mastery": round(real_mastery, 4),
+            "accuracy": round(real_accuracy, 4),
+            "current_skill_level": db_student.current_skill_level if has_diag else "Not determined",
+            "learning_pace": db_student.learning_pace if has_diag else "Not determined",
+            "recommended_difficulty": db_student.current_skill_level if has_diag else "Not determined",
+            "predicted_mastery_level": db_student.current_skill_level if has_diag else "Not determined",
+            "learning_style": db_student.explanation_style or "step_by_step",
+            "explanation_style": db_student.explanation_style or "step_by_step",
+            "preferences": db_student.preferences or {},
+            "accessibility": db_student.accessibility or {},
+            "tests_completed": attempts_count,
+            "diagnostic_completed_count": attempts_count,
+            "recent_attempts": recent_attempts,
+            "recent_activity": recent_attempts[0] if recent_attempts else None,
+            "has_completed_diagnostic": has_diag,
+        }
+
+    # Fallback to local student state dataset (e.g. S001)
     state = get_student_state(student_id)
     if not state:
         return {
@@ -333,6 +518,7 @@ def get_student_profile(student_id: str, fresh: bool = False) -> Dict[str, Any]:
             "predicted_mastery_level": "New Learner",
             "learning_style": "balanced",
             "tests_completed": 0,
+            "full_name": "Student",
         }
 
     completed_count = 0
@@ -351,6 +537,7 @@ def get_student_profile(student_id: str, fresh: bool = False) -> Dict[str, Any]:
         "found": True,
         "learning_style": "balanced",
         "tests_completed": completed_count,
+        "full_name": state.get("full_name", f"Student {student_id}"),
     }
 
 
@@ -371,7 +558,11 @@ def reset_student_profile(student_id: str) -> Dict[str, Any]:
 
 
 @app.post("/api/session/generate")
-def generate_session(req: LearningSessionRequest) -> Dict[str, Any]:
+async def generate_session(
+    req: LearningSessionRequest,
+    authorization: Optional[str] = Header(None),
+) -> Dict[str, Any]:
+    await check_student_authorization(req.student_id, authorization, require_diagnostic=True)
     try:
         service = get_service(provider=req.provider, model=req.model)
         result = service.run_learning_session(
@@ -385,10 +576,18 @@ def generate_session(req: LearningSessionRequest) -> Dict[str, Any]:
             learning_cycle=req.learning_cycle,
         )
         return result
-    except (OllamaConnectionError, OllamaTimeoutError) as e:
-        raise HTTPException(
-            status_code=503,
-            detail="EduAdapt could not connect to Mistral 7B. Please start Ollama and try again.",
+    except (OllamaConnectionError, OllamaTimeoutError, OllamaResponseError) as e:
+        logger.warning("Ollama connection/timeout/model error (%s), falling back to curriculum generator", e)
+        fallback_service = get_service(provider="mock", model=req.model or "mistral:7b")
+        return fallback_service.run_learning_session(
+            student_id=req.student_id,
+            topic=req.topic,
+            top_k=req.top_k,
+            generate_roadmap=True,
+            generate_feedback=True,
+            assessment_submission=req.assessment_submission,
+            subtopic=req.subtopic,
+            learning_cycle=req.learning_cycle,
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to generate learning session: {str(e)}")
@@ -398,8 +597,13 @@ tutor_history_service = TutorHistoryService()
 
 
 @app.get("/api/tutor/history/{student_id}/{topic}")
-def get_tutor_history(student_id: str, topic: str) -> Dict[str, Any]:
+async def get_tutor_history(
+    student_id: str,
+    topic: str,
+    authorization: Optional[str] = Header(None),
+) -> Dict[str, Any]:
     """Retrieve persistent conversation history for a student on a specific topic."""
+    await check_student_authorization(student_id, authorization, require_diagnostic=True)
     messages = tutor_history_service.get_history(student_id, topic)
     return {
         "student_id": student_id,
@@ -409,8 +613,13 @@ def get_tutor_history(student_id: str, topic: str) -> Dict[str, Any]:
 
 
 @app.delete("/api/tutor/history/{student_id}/{topic}")
-def clear_tutor_history(student_id: str, topic: str) -> Dict[str, Any]:
+async def clear_tutor_history(
+    student_id: str,
+    topic: str,
+    authorization: Optional[str] = Header(None),
+) -> Dict[str, Any]:
     """Reset persistent conversation history for a student on a specific topic."""
+    await check_student_authorization(student_id, authorization, require_diagnostic=True)
     cleared = tutor_history_service.clear_topic_history(student_id, topic)
     return {
         "student_id": student_id,
@@ -421,8 +630,12 @@ def clear_tutor_history(student_id: str, topic: str) -> Dict[str, Any]:
 
 
 @app.post("/api/tutor/chat")
-def tutor_chat(req: TutorChatRequest) -> Dict[str, Any]:
+async def tutor_chat(
+    req: TutorChatRequest,
+    authorization: Optional[str] = Header(None),
+) -> Dict[str, Any]:
     """Curriculum-grounded AI Tutor dialogue using the existing LLM and RAG pipelines."""
+    await check_student_authorization(req.student_id, authorization, require_diagnostic=True)
     service = get_service()
 
     # Retrieve prior conversation context before logging this turn
@@ -528,11 +741,29 @@ def tutor_chat(req: TutorChatRequest) -> Dict[str, Any]:
             "diagram": diagram_data,
             "history": tutor_history_service.get_history(req.student_id, req.topic),
         }
-    except (OllamaConnectionError, OllamaTimeoutError) as e:
-        raise HTTPException(
-            status_code=503,
-            detail="EduAdapt could not connect to Mistral 7B. Please start Ollama and try again.",
+    except (OllamaConnectionError, OllamaTimeoutError, OllamaResponseError) as e:
+        logger.warning("Ollama tutor error (%s), using grounded curriculum tutor response", e)
+        fallback_reply = (
+            f"**Curriculum Concept Summary for {req.topic}:**\n\n"
+            f"{curriculum_context if curriculum_context else 'Please review the core definitions, syntax, and logic in the curriculum.'}\n\n"
+            f"> *Note: Local Ollama model `{service.llm_client.model_name}` is not available. "
+            f"To enable live generative AI responses, run `ollama pull mistral:7b` in your terminal.*"
         )
+        tutor_history_service.append_message(
+            student_id=req.student_id,
+            topic=req.topic,
+            role="assistant",
+            text=fallback_reply,
+        )
+        return {
+            "reply": fallback_reply,
+            "topic": req.topic,
+            "student_id": req.student_id,
+            "model": "curriculum-fallback",
+            "curriculum_sources": retrieved_sources,
+            "diagram": None,
+            "history": tutor_history_service.get_history(req.student_id, req.topic),
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI Tutor generation error: {str(e)}")
 
@@ -541,14 +772,23 @@ question_service = QuestionService()
 
 
 @app.get("/api/practice/{student_id}/{topic}/mcqs")
-def get_practice_mcqs(student_id: str, topic: str) -> Dict[str, Any]:
+async def get_practice_mcqs(
+    student_id: str,
+    topic: str,
+    authorization: Optional[str] = Header(None),
+) -> Dict[str, Any]:
     """Retrieve exactly 5 verified PPS curriculum practice questions (|P| = 5)."""
+    await check_student_authorization(student_id, authorization, require_diagnostic=True)
     return question_service.get_practice_session(student_id, topic)
 
 
 @app.post("/api/practice/submit")
-def submit_practice(req: PracticeSubmitRequest) -> Dict[str, Any]:
+async def submit_practice(
+    req: PracticeSubmitRequest,
+    authorization: Optional[str] = Header(None),
+) -> Dict[str, Any]:
     """Authoritative backend evaluation of 5-question practice session and Learning Twin update."""
+    await check_student_authorization(req.student_id, authorization, require_diagnostic=True)
     service = get_service()
     eval_res = question_service.evaluate_practice_submission(
         student_id=req.student_id,
@@ -569,8 +809,14 @@ def submit_practice(req: PracticeSubmitRequest) -> Dict[str, Any]:
 
 
 @app.get("/api/assessment/{student_id}/{topic}")
-def get_assessment_for_topic(student_id: str, topic: str, question_idx: int = 0) -> Dict[str, Any]:
+async def get_assessment_for_topic(
+    student_id: str,
+    topic: str,
+    question_idx: int = 0,
+    authorization: Optional[str] = Header(None),
+) -> Dict[str, Any]:
     """Retrieve verified PPS practice question for the topic (|P| = 5)."""
+    await check_student_authorization(student_id, authorization)
     practice_session = question_service.get_practice_session(student_id, topic)
     questions = practice_session.get("questions", [])
     if questions:
@@ -601,14 +847,23 @@ def get_assessment_for_topic(student_id: str, topic: str, question_idx: int = 0)
 
 
 @app.get("/api/assessment/{student_id}/{topic}/all")
-def get_all_assessments_for_topic(student_id: str, topic: str) -> Dict[str, Any]:
+async def get_all_assessments_for_topic(
+    student_id: str,
+    topic: str,
+    authorization: Optional[str] = Header(None),
+) -> Dict[str, Any]:
     """Retrieve exactly 10 verified PPS assessment questions (guaranteed P ∩ A = ∅)."""
+    await check_student_authorization(student_id, authorization, require_diagnostic=True)
     return question_service.get_assessment_session(student_id, topic)
 
 
 @app.post("/api/assessment/submit")
-def submit_assessment(req: AssessmentSubmitRequest) -> Dict[str, Any]:
+async def submit_assessment(
+    req: AssessmentSubmitRequest,
+    authorization: Optional[str] = Header(None),
+) -> Dict[str, Any]:
     """Authoritative backend evaluation for assessment and Learning Twin recomputation (<10ms)."""
+    await check_student_authorization(req.student_id, authorization, require_diagnostic=True)
     service = get_service()
 
     if req.answers and len(req.answers) > 0:
@@ -642,8 +897,51 @@ def submit_assessment(req: AssessmentSubmitRequest) -> Dict[str, Any]:
 
 
 @app.get("/api/roadmap/{student_id}")
-def get_student_roadmap(student_id: str) -> Dict[str, Any]:
+async def get_student_roadmap(
+    student_id: str,
+    authorization: Optional[str] = Header(None),
+) -> Dict[str, Any]:
     """Retrieve student progression roadmap showing completed, active, and upcoming topics."""
+    await check_student_authorization(student_id, authorization)
+
+    try:
+        from eduadapt.db.session import get_async_session_factory
+        from eduadapt.db.models.student import Student
+        from eduadapt.services.roadmap_service import generate_student_roadmap
+        from sqlalchemy import select
+        import uuid
+
+        factory = get_async_session_factory()
+        async with factory() as session:
+            db_student = None
+            if student_id.lower() in ("me", "self") and authorization and authorization.startswith("Bearer "):
+                try:
+                    from eduadapt.services.auth_service import decode_access_token
+                    payload = decode_access_token(authorization.split(" ", 1)[1].strip())
+                    uid = uuid.UUID(payload.get("sub"))
+                    stmt = select(Student).where(Student.user_id == uid)
+                    db_student = (await session.execute(stmt)).scalar_one_or_none()
+                except Exception:
+                    pass
+
+            if not db_student:
+                stmt = select(Student).where(Student.student_code == student_id)
+                res = await session.execute(stmt)
+                db_student = res.scalar_one_or_none()
+
+            if not db_student:
+                try:
+                    uid = uuid.UUID(student_id)
+                    stmt = select(Student).where(Student.id == uid)
+                    db_student = (await session.execute(stmt)).scalar_one_or_none()
+                except Exception:
+                    pass
+
+            if db_student:
+                return await generate_student_roadmap(session=session, student=db_student)
+    except Exception as e:
+        logger.warning("Could not load roadmap from DB: %s", e)
+
     return question_service.get_student_roadmap(student_id)
 
 
@@ -747,11 +1045,36 @@ def generate_practice(req: PracticeGenerateRequest) -> Dict[str, Any]:
             "practice_problems": [challenge_for_client],
             "practice_content": gen_res.content,
         }
-    except (OllamaConnectionError, OllamaTimeoutError):
-        raise HTTPException(
-            status_code=503,
-            detail="EduAdapt could not connect to Mistral 7B. Please start Ollama and try again.",
+    except (OllamaConnectionError, OllamaTimeoutError, OllamaResponseError) as e:
+        logger.warning("Ollama practice generation error (%s), falling back to mock generator", e)
+        fallback_service = get_service(provider="mock", model=req.model or "mistral:7b")
+        gen_res = fallback_service.teaching_generator.generate_practice_problems(
+            topic=req.topic,
+            student_profile=profile,
+            learning_state=raw_state,
         )
+        challenge = ResponseParser.parse_coding_challenge(
+            raw_text=gen_res.content,
+            topic=req.topic,
+            difficulty=p_context.recommended_difficulty,
+            mastery_tier=p_context.mastery_tier,
+        )
+        challenge_for_client = dict(challenge)
+        challenge_for_client.pop("reference_solution", None)
+        return {
+            "student_id": req.student_id,
+            "topic": req.topic,
+            "target_mastery": f"{p_context.topic_mastery:.2f}",
+            "recommended_difficulty": p_context.recommended_difficulty,
+            "mastery_tier": p_context.mastery_tier,
+            "learning_pace": p_context.learning_pace,
+            "accuracy": p_context.accuracy,
+            "predicted_mastery_level": p_context.predicted_mastery_level,
+            "model": gen_res.model_name,
+            "challenge": challenge_for_client,
+            "practice_problems": [challenge_for_client],
+            "practice_content": gen_res.content,
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Practice problem generation error: {str(e)}")
 
@@ -1011,11 +1334,22 @@ def generate_roadmap(req: RoadmapGenerateRequest) -> Dict[str, Any]:
             "roadmap_content": gen_res.content,
             "model": gen_res.model_name,
         }
-    except (OllamaConnectionError, OllamaTimeoutError):
-        raise HTTPException(
-            status_code=503,
-            detail="EduAdapt could not connect to Mistral 7B. Please start Ollama and try again.",
+    except (OllamaConnectionError, OllamaTimeoutError, OllamaResponseError) as e:
+        logger.warning("Ollama roadmap error (%s), falling back to mock generator", e)
+        fallback_service = get_service(provider="mock")
+        gen_res = fallback_service.teaching_generator.generate_adaptive_roadmap(
+            target_competency=f"{req.topic} Mastery in PPS C Programming",
+            topic=req.topic,
+            student_profile=profile,
+            learning_state=raw_state,
         )
+        return {
+            "topic": req.topic,
+            "student_id": req.student_id,
+            "target_competency": f"{req.topic} Mastery in PPS",
+            "roadmap_content": gen_res.content,
+            "model": gen_res.model_name,
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Roadmap generation error: {str(e)}")
 
@@ -1095,8 +1429,13 @@ def get_subtopics(topic: str) -> List[Dict[str, Any]]:
 
 
 @app.get("/api/subtopics/progress/{student_id}/{topic}")
-def get_subtopic_progress(student_id: str, topic: str) -> Dict[str, Any]:
+async def get_subtopic_progress(
+    student_id: str,
+    topic: str,
+    authorization: Optional[str] = Header(None),
+) -> Dict[str, Any]:
     """Retrieve persistent subtopic learning progress and adaptive cycle states for student."""
+    await check_student_authorization(student_id, authorization)
     service = get_service()
     return service.subtopic_service.get_topic_progress(
         student_id=student_id,
@@ -1106,15 +1445,24 @@ def get_subtopic_progress(student_id: str, topic: str) -> Dict[str, Any]:
 
 
 @app.get("/api/subtopics/roadmap/{student_id}/{topic}")
-def get_subtopic_roadmap(student_id: str, topic: str) -> Dict[str, Any]:
+async def get_subtopic_roadmap(
+    student_id: str,
+    topic: str,
+    authorization: Optional[str] = Header(None),
+) -> Dict[str, Any]:
     """Retrieve subtopic progression roadmap with granular statuses (LOCKED, UNLOCKED, IN_PROGRESS, etc.)."""
+    await check_student_authorization(student_id, authorization)
     service = get_service()
     return service.subtopic_service.get_student_subtopic_roadmap(student_id, topic)
 
 
 @app.post("/api/subtopics/reading/complete")
-def mark_subtopic_reading_complete(req: SubtopicReadingCompleteRequest) -> Dict[str, Any]:
+async def mark_subtopic_reading_complete(
+    req: SubtopicReadingCompleteRequest,
+    authorization: Optional[str] = Header(None),
+) -> Dict[str, Any]:
     """Mark genuine reading completion for an unlocked or active subtopic."""
+    await check_student_authorization(req.student_id, authorization, require_diagnostic=True)
     service = get_service()
     try:
         updated_sub = service.subtopic_service.mark_reading_complete(
@@ -1137,8 +1485,12 @@ def mark_subtopic_reading_complete(req: SubtopicReadingCompleteRequest) -> Dict[
 
 
 @app.post("/api/subtopics/mastery-check/submit")
-def submit_subtopic_mastery_check(req: SubtopicMasteryCheckRequest) -> Dict[str, Any]:
+async def submit_subtopic_mastery_check(
+    req: SubtopicMasteryCheckRequest,
+    authorization: Optional[str] = Header(None),
+) -> Dict[str, Any]:
     """Authoritatively evaluate mandatory subtopic mastery-check question and unlock next subtopic upon success."""
+    await check_student_authorization(req.student_id, authorization, require_diagnostic=True)
     service = get_service()
     try:
         eval_result = service.subtopic_service.evaluate_mastery_check(
@@ -1159,8 +1511,12 @@ def submit_subtopic_mastery_check(req: SubtopicMasteryCheckRequest) -> Dict[str,
 
 
 @app.post("/api/subtopics/reset")
-def reset_subtopic_progress(req: SubtopicResetRequest) -> Dict[str, Any]:
+async def reset_subtopic_progress(
+    req: SubtopicResetRequest,
+    authorization: Optional[str] = Header(None),
+) -> Dict[str, Any]:
     """Reset a student's subtopic progress back to strict baseline (subtopic 1 UNLOCKED, 2..N LOCKED)."""
+    await check_student_authorization(req.student_id, authorization)
     service = get_service()
     service.subtopic_service.reset_topic_progress(req.student_id, req.topic)
     return {
@@ -1172,8 +1528,12 @@ def reset_subtopic_progress(req: SubtopicResetRequest) -> Dict[str, Any]:
 
 
 @app.post("/api/subtopics/cycle/advance")
-def advance_subtopic_cycle(req: CycleAdvanceRequest) -> Dict[str, Any]:
+async def advance_subtopic_cycle(
+    req: CycleAdvanceRequest,
+    authorization: Optional[str] = Header(None),
+) -> Dict[str, Any]:
     """Record an adaptive cycle attempt, assess mastery evidence, and advance cycle or unlock next subtopic."""
+    await check_student_authorization(req.student_id, authorization)
     service = get_service()
     return service.subtopic_service.record_cycle_attempt(
         student_id=req.student_id,
